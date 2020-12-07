@@ -1,0 +1,39 @@
+---
+title: "Model"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data story
+
+Assume that we have collected pulse wave velocity (PWV) on a set of 2,500 participants at two time points, 5 years apart. However, we used a different machine at the first visit than the second visit. The two machines have known measurement error. Therefore, we will try to build a model that can use both measurements to calculate a valid 5-year difference in PWV.
+
+# Model
+
+Let $Y_1$ be *measured* PWV at visit 1 and $Y_2$ be measured PWV at visit 2. Each of these measurements of PWV is subject to measurement error for the true PWV, $Z_1$ and $Z_2$, at each visit. Assume 
+$$
+Y_1 \sim N(Z_1, \tau_1)\\
+Z_1 \sim N(\mu_1, \sigma)\\
+Y_2 \sim N(Z_2, \tau_2)\\
+Z_2 \sim N(\mu_2, \sigma)
+$$
+
+The estimand of interest is $\theta = \mu_2 - \mu_1$. Based upon the stated model, we have the following assumptions:
+
+1. The measurements of PWV are unbiased for the true values.
+2. The measurement error for measuring PWV is different between visit 1 and visit 2.
+3. The mean PWV is different between visit 1 and visit 2
+4. The variability of true PWV is the same at visit 1 and visit 2.
+5. There are 7 parameters to estimate and 4 likelihoods.
+
+Thoughts:
+
+* It might be reasonable to assume that the errors are correlated. In other words, $$corr(Y_1 - Z_1, Y_2 - Z_2) \ne 
+\begin{bmatrix}
+1 & 0\\
+0 & 1\\
+\end{bmatrix}
+$$
