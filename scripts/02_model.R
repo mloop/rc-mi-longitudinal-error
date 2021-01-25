@@ -26,7 +26,8 @@ fit_stan <- sims %>%
   mutate(
     df_dat = map(df, ~compose_data(select(., pwv_visit1_measured, pwv_visit2_measured, female))),
     fits = map(df_dat, ~stan(file = "02_model.stan", data = .,
-                             iter = 100))
+                             iter = 5000,
+                             chains = 8))
   )
 
 write_rds(fit_stan, file = "../output/2021-01-25/02_stan_model.rds")
