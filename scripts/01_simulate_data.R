@@ -21,7 +21,7 @@ sims <-
 
   pwv_visit1_measured = pwv_visit1 + rnorm(n, mean = 0, sd = 20),
 
-  pwv_visit2_measured = pwv_visit2 + rnorm(n, mean = 10, sd = 10)
+  pwv_visit2_measured = pwv_visit2 + rnorm(n, mean = 0, sd = 10)
                 )
             )
 ) %>%
