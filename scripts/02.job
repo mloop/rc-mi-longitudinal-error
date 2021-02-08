@@ -3,7 +3,10 @@
 #SBATCH -p general
 #SBATCH -N 1
 #SBATCH --mem=5g
-#SBATCH -n 8
-#SBATCH -t 01:00:00
+#SBATCH -n 4
+#SBATCH -t 02:00:00
 
+module load r/4.0.3
+module load gcc/6.3.0
+Rscript 01_simulate_data.R
 Rscript 02_model.R
