@@ -4,7 +4,7 @@
 #SBATCH -N 1
 #SBATCH --mem=5g
 #SBATCH -n 4
-#SBATCH -t 02:00:00
+#SBATCH -t 3-
 
 module load r/4.0.3
 module load gcc/6.3.0
