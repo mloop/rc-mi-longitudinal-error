@@ -1,4 +1,5 @@
 library(tidyverse)
+library(ggsci)
 
 fits_true <- read_rds("../output/02_simple_lm.rds")
 fits_obs <- read_rds("../output/02_simple_lm_observed.rds")
@@ -28,3 +29,24 @@ bias <- bind_rows(fits_true %>% select(iteration, fits) %>% mutate(method = "tru
     bias = mean_estimate - true_value,
     percent_bias = (mean_estimate - true_value) / true_value * 100
 )
+
+p_bias <- bias %>%
+  mutate(term = factor(term) %>% 
+           fct_recode("Residual standard deviation" = "hat_sigma", "Intercept" = "bhat_int", "Female" = "bhat_female", "PWV at visit 1" = "bhat_pwv") %>% 
+           fct_reorder(percent_bias),
+         method = factor(method) %>% fct_recode("True value" = "true",
+                                                "Observed value" = "observed")) %>%
+  ggplot(aes(x = percent_bias, y = term, color = method)) +
+  geom_point(position = position_dodge(0.3)) +
+  scale_color_nejm(name = "") +
+  theme_classic() +
+  labs(
+    x = "Percent bias (%)",
+    y = "",
+    title = "Percent bias for each regression parameter and\nresidual standard deviation, by data analyzed"
+  ) +
+  theme(
+    plot.title.position = "plot"
+  )
+
+ggsave(filename = "../figs/03_bias_plot.png", p_bias)
