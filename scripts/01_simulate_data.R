@@ -21,7 +21,11 @@ sims <-
 
   pwv_visit1_measured = pwv_visit1 + rnorm(n, mean = 0, sd = 112.8),
 
-  pwv_visit2_measured = pwv_visit2 + rnorm(n, mean = 0, sd = 30)  # From Hickson 2009. 30 was estimated from only 2 values, so it's hard to say 
+  # To use the Hickson vicorder, paper, let's assume the following:
+  #   1. the CV within visit was 2.8% (reported in paper)
+  #   2. the overall mean aPWV in Hickson is 800 cm/s
+  #   3. based on formula for CV, we calculate in-person SD to be 0.028 * 800 = 22.4
+  pwv_visit2_measured = pwv_visit2 + rnorm(n, mean = 0, sd = 22.4)  
                 )
             )
 ) %>%
