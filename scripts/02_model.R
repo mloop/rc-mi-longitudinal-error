@@ -12,14 +12,14 @@ fit_true <- sims %>%
   mutate(
     fits = map(df, ~lm(pwv_visit2 ~ pwv_visit1 + female, data = .))
   )
-fit_true %>% write_rds(., file = "../output/2021-01-25/02_simple_lm.rds")
+fit_true %>% write_rds(., file = "../output/02_simple_lm.rds")
 
 # Fit simple linear regression model to observed values
 fit_obs <- sims %>%
   mutate(
     fits = map(df, ~lm(pwv_visit2_measured ~ pwv_visit1_measured + female, data = .))
   )
-fit_obs %>% write_rds(file = "../output/2021-01-25/02_simple_lm_observed.rds")
+fit_obs %>% write_rds(file = "../output/02_simple_lm_observed.rds")
 
 # Fit stan model
 fit_stan <- sims %>%
