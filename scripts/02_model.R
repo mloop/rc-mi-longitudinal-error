@@ -1,7 +1,7 @@
 library(tidyverse)
 library(rstan)
 library(tidybayes)
-
+ 
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
@@ -21,15 +21,12 @@ fit_obs <- sims %>%
   )
 fit_obs %>% write_rds(file = "../output/02_simple_lm_observed.rds")
 
-# Fit stan model
-fit_stan <- sims %>%
+# Perform "calibration method" at visit 1, then use predicted values to fit model
+fit_calib <- sims %>%
   mutate(
-    df_dat = map(df, ~compose_data(select(., pwv_visit1_measured, pwv_visit2_measured, female))),
-    fits = map(df_dat, ~stan(file = "02_model.stan", data = .,
-                             iter = 5000,
-                             chains = 4,
-                             include = TRUE,
-                             pars = c("mu_u", "sigma", "beta", "beta_1", "mu_pwv_1", "sigma_pwv_1")))
-  )
-
-write_rds(fit_stan, file = "../output/2021-01-25/02_stan_model.rds")
+    calib_fit = map(df, ~lm(pwv_visit1_measured_calibration ~ pwv_visit1_measured, data = .)),
+    df_calib = map2(df, calib_fit, ~modelr::add_predictions(.x, model = .y)),
+    fits = map(df_calib, ~lm(pwv_visit2_measured ~ pred + female, data = .))
+  ) %>%
+  select(-calib_fit)
+fit_calib %>% write_rds(file = "../output/02_simple_lm_calib.rds")

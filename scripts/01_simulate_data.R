@@ -7,7 +7,7 @@ n <- 2500
 # Create true values of PWV
 
 sims <- 
-  tibble(iteration = seq(1, 2000, 1)) %>%
+  tibble(iteration = seq(1, 3500, 1)) %>%
   group_by(iteration) %>%
   nest() %>%
   mutate(
@@ -25,7 +25,9 @@ sims <-
   #   1. the CV within visit was 2.8% (reported in paper)
   #   2. the overall mean aPWV in Hickson is 800 cm/s
   #   3. based on formula for CV, we calculate in-person SD to be 0.028 * 800 = 22.4
-  pwv_visit2_measured = pwv_visit2 + rnorm(n, mean = 0, sd = 22.4)  
+  pwv_visit2_measured = pwv_visit2 + rnorm(n, mean = 0, sd = 22.4),
+  
+  pwv_visit1_measured_calibration = pwv_visit1 + rnorm(n, mean = 0, sd = 22.4)
                 )
             )
 ) %>%
