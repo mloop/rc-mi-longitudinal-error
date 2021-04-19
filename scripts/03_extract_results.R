@@ -38,7 +38,7 @@ p_bias <- bias %>%
            fct_reorder(percent_bias),
          method = factor(method) %>% fct_recode("True value" = "true",
                                                 "Observed value" = "observed",
-                                                "Calibrated method" = "calibrated")) %>%
+                                                "Calibrated value" = "calibrated")) %>%
   ggplot(aes(x = percent_bias, y = term, color = method)) +
   geom_point(position = position_dodge(0.3)) +
   scale_color_nejm(name = "") +

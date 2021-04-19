@@ -18,11 +18,12 @@ sims <-
     ) %>%
     group_by(id) %>%
     mutate(
-      pwv_visit2 = truncnorm::rtruncnorm(1, mean = (20 + 1 * pwv_visit1 - 5 * female), sd = 10, a = 350, b = 2400), # PWV after 5 years
+      pwv_visit1_c = scale(pwv_visit1, scale = FALSE),
+      pwv_visit2 = truncnorm::rtruncnorm(1, mean = (1120 + 0.9 * pwv_visit1_c - 5 * female), sd = 50, a = 350, b = 2400), # PWV after 5 years
 
 # Create two different measurements of PWV, with measurement error, where the distribution is different at the different time points, due to different machines.
 
-      pwv_visit1_measured = truncnorm::rtruncnorm(1, mean = pwv_visit1, sd = 112.8, a = 350, b = 2400),
+      pwv_visit1_measured = truncnorm::rtruncnorm(1, mean = pwv_visit1, sd = 112.8, a = 350, b = 2400) %>% as.numeric(),
 
   # To use the Hickson vicorder, paper, let's assume the following:
   #   1. the CV within visit was 2.8% (reported in paper)
@@ -32,8 +33,10 @@ sims <-
   
       pwv_visit1_measured_calibration = truncnorm::rtruncnorm(1, mean = pwv_visit1, sd = 22.4, a = 350, b = 2400)
                 )
+%>% ungroup()
             )
 ) %>%
-  select(-data)
+  select(-data) %>%
+  ungroup()
 
 write_rds(sims, file = "../data/01_simulated_data.rds")
