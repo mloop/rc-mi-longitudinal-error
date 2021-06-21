@@ -7,19 +7,19 @@ n <- 2500
 # Create true values of PWV
 
 sims <- 
-  tibble(iteration = seq(1, 3500, 1)) %>%
+  tibble(iteration = seq(1, 10, 1)) %>%
   group_by(iteration) %>%
   nest() %>%
   mutate(
     df = map(iteration, ~tibble(
       id = seq(1, n, 1),
   pwv_visit1 = truncnorm::rtruncnorm(n, mean = 1100, sd = 350, a = 350, b = 2400),
-  female = rbinom(n, size = 1, prob = 0.5)
+  female = rbinom(n, size = 1, prob = 0.5),
+  pwv_visit1_c = scale(pwv_visit1, scale = FALSE) %>% as.numeric()
     ) %>%
     group_by(id) %>%
     mutate(
-      pwv_visit1_c = scale(pwv_visit1, scale = FALSE),
-      pwv_visit2 = truncnorm::rtruncnorm(1, mean = (1120 + 0.9 * pwv_visit1_c - 5 * female), sd = 50, a = 350, b = 2400), # PWV after 5 years
+      pwv_visit2 = truncnorm::rtruncnorm(1, mean = (1120 + 0.1 * pwv_visit1_c - 5 * female), sd = 50, a = 350, b = 2400), # PWV after 5 years
 
 # Create two different measurements of PWV, with measurement error, where the distribution is different at the different time points, due to different machines.
 
