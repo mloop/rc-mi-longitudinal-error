@@ -7,7 +7,7 @@ n <- 2500
 # Create true values of PWV
 
 sims <- 
-  tibble(iteration = seq(1, 10, 1)) %>%
+  tibble(iteration = seq(1, 2000, 1)) %>%
   group_by(iteration) %>%
   nest() %>%
   mutate(

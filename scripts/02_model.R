@@ -33,12 +33,12 @@ fit_calib <- sims %>%
 fit_calib %>% write_rds(file = "../output/02_simple_lm_calib.rds")
 
 # Fit Bayesian measurement error model
-
+ 
 me_mod <- stan_model(file = "02_model.stan")
 
 library(furrr)
 
-plan(multisession, workers = 10)
+plan(multisession, workers = 30)
 
 fit_bayes <- sims %>%
   mutate(
