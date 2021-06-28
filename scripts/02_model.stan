@@ -8,8 +8,8 @@ data {
 
 
 parameters {
-  vector<lower=0>[n] pwv_visit2;
-  vector<lower=0>[n] pwv_visit1;
+  vector<lower=300,upper=2500>[n] pwv_visit2;
+  vector<lower=300,upper=2500>[n] pwv_visit1;
   real<lower=0> beta_0;
   real<lower=0> sigma;
   real beta;

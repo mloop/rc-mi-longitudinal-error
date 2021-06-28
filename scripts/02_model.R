@@ -6,7 +6,7 @@ options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
 sims <- read_rds("../data/01_simulated_data.rds") %>%
-  filter(iteration == 1)
+  filter(iteration <= 2)
 
 # Fit simple linear regression model to true values
 fit_true <- sims %>%
@@ -36,9 +36,16 @@ fit_calib %>% write_rds(file = "../output/02_simple_lm_calib.rds")
 
 me_mod <- stan_model(file = "02_model.stan")
 
+library(furrr)
+
+plan(multisession, workers = 10)
+
 fit_bayes <- sims %>%
   mutate(
-    data_stan = map(df, ~tidybayes::compose_data(.)),
-    fits = map(data_stan, ~sampling(me_mod, data = ., iter = 2000, chains = 4,
-                                    pars = c("mu_pwv_1", "sigma_pwv_1", "beta_0", "beta", "beta_1", "sigma"), include = TRUE))
+    data_stan = future_map(df, ~tidybayes::compose_data(.)),
+    fits = future_map(data_stan, ~sampling(me_mod, data = ., iter = 2000, chains = 4,
+                                    pars = c("mu_pwv_1", "sigma_pwv_1", "beta_0", "beta", "beta_1", "sigma"), include = TRUE),
+          seed = TRUE)
   )
+
+fit_bayes %>% write_rds(file = "../output/02_bayes_mem.rds")
