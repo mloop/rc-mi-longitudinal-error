@@ -36,8 +36,9 @@ fit_calib %>% write_rds(file = "../output/02_simple_lm_calib.rds")
 
 me_mod <- stan_model(file = "02_model.stan")
 
-fit_obs <- sims %>%
+fit_bayes <- sims %>%
   mutate(
-    data_stan = map(df, ~mutate(., pwv_visit1_measured_c = scale(pwv_visit1_measured) %>% as.numeric()) %>% select(-pwv_visit1_measured) %>% rename(pwv_visit1_measured = pwv_visit1_measured_c) %>% tidybayes::compose_data(.)),
-    fits = map(data_stan, ~sampling(me_mod, data = ., iter = 5000, chains = 2))
+    data_stan = map(df, ~tidybayes::compose_data(.)),
+    fits = map(data_stan, ~sampling(me_mod, data = ., iter = 2000, chains = 4,
+                                    pars = c("mu_pwv_1", "sigma_pwv_1", "beta_0", "beta", "beta_1", "sigma"), include = TRUE))
   )
