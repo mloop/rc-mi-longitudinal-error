@@ -4,6 +4,7 @@ library(ggsci)
 fit_true <- read_rds("../output/02_simple_lm.rds")
 fit_obs <- read_rds("../output/02_simple_lm_observed.rds")
 fit_calib <- read_rds("../output/02_simple_lm_calib.rds")
+fit_bayes <- read_rds("../output/02_bayes_mem.rds")
 
 bias <- bind_rows(fit_true %>% select(iteration, fits) %>% mutate(method = "true"),
                   fit_obs %>% select(iteration, fits) %>% mutate(method = "observed"),
@@ -23,10 +24,10 @@ bias <- bind_rows(fit_true %>% select(iteration, fits) %>% mutate(method = "true
   summarise(mean_estimate = mean(estimate)) %>%
   mutate(
     true_value = case_when(
-        term == "bhat_int" ~ 20,
-        term == "bhat_pwv" ~ 1,
+        term == "bhat_int" ~ 1100,
+        term == "bhat_pwv" ~ 0.1,
         term == "bhat_female" ~ -5,
-        term == "hat_sigma" ~ 10
+        term == "hat_sigma" ~ 50
       ),
     bias = mean_estimate - true_value,
     percent_bias = (mean_estimate - true_value) / true_value * 100

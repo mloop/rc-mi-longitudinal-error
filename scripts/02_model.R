@@ -5,8 +5,7 @@ library(tidybayes)
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
-sims <- read_rds("../data/01_simulated_data.rds") %>%
-  filter(iteration <= 2)
+sims <- read_rds("../data/01_simulated_data.rds")
 
 # Fit simple linear regression model to true values
 fit_true <- sims %>%
