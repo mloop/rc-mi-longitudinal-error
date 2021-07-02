@@ -37,7 +37,7 @@ me_mod <- stan_model(file = "02_model.stan")
 
 library(furrr)
 
-plan(multisession, workers = 30)
+plan(multicore, workers = 30)
 
 fit_bayes <- sims %>%
   mutate(
