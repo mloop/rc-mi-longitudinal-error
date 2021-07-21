@@ -31,9 +31,14 @@ sims <-
   #   3. based on formula for CV, we calculate in-person SD to be 0.028 * 800 = 22.4
       pwv_visit2_measured = truncnorm::rtruncnorm(1, mean = pwv_visit2, sd = 22.4, a = 300, b = 2500),
   
-      pwv_visit1_measured_calibration = truncnorm::rtruncnorm(1, mean = pwv_visit1, sd = 22.4, a = 300, b = 2500)
-                )
-%>% ungroup()
+      pwv_visit1_measured_calibration = truncnorm::rtruncnorm(1, mean = pwv_visit1, sd = 22.4, a = 300, b = 2500),
+      
+                ) %>% 
+    ungroup() %>%
+    mutate(
+      pwv_visit1_measured_c = scale(pwv_visit1_measured, scale = FALSE) %>% as.numeric(),
+      pwv_visit1_measured_calibration_c = scale(pwv_visit1_measured_calibration, scale = FALSE) %>% as.numeric()
+    )
             )
 ) %>%
   select(-data) %>%
