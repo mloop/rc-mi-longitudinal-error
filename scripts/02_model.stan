@@ -18,16 +18,22 @@ parameters {
   real<lower=0> sigma_pwv_1;
 }
 
+transformed parameters {
+  vector<lower=-2200,upper=2800>[n] pwv_visit1_c;
+  
+  pwv_visit1_c = pwv_visit1 - mean(pwv_visit1);
+}
+
 model {
   
   // likelihood
   pwv_visit1 ~ normal(mu_pwv_1, sigma_pwv_1);
   pwv_visit1_measured ~ normal(pwv_visit1, 112.8);
   pwv_visit2_measured ~ normal(pwv_visit2, 22.4);
-  pwv_visit2 ~ normal(beta_0 + beta * female + beta_1 * pwv_visit1, sigma);
+  pwv_visit2 ~ normal(beta_0 + beta * female + beta_1 * pwv_visit1_c, sigma);
   
   // priors
-  beta_0 ~ normal(1100, 10);
+  beta_0 ~ normal(1120, 10);
   sigma ~ student_t(50, 3, 10);
   beta ~ normal(0, 5);
   beta_1 ~ normal(0, 5);
