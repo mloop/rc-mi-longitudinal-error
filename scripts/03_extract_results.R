@@ -45,7 +45,7 @@ bias_combined <- bind_rows(bias, bias_bayes) %>%
   summarise(mean_estimate = mean(estimate)) %>%
   mutate(
     true_value = case_when(
-      term == "bhat_int" ~ 1100,
+      term == "bhat_int" ~ 1120,
       term == "bhat_pwv" ~ 0.1,
       term == "bhat_female" ~ -5,
       term == "hat_sigma" ~ 50
@@ -100,7 +100,7 @@ coverage_bayes <- fit_bayes %>%
     conf_int = map(fits, ~spread_draws(., beta_0, beta, beta_1) %>% 
                          mean_qi()),
     int_low = map_dbl(conf_int, ~select(., beta_0.lower) %>% as.numeric()),
-    int_low = map_dbl(conf_int, ~select(., beta_0.upper) %>% as.numeric()),
+    int_high = map_dbl(conf_int, ~select(., beta_0.upper) %>% as.numeric()),
     pwv_low = map_dbl(conf_int, ~select(., beta_1.lower) %>% as.numeric()),
     pwv_high = map_dbl(conf_int, ~select(., beta_1.upper) %>% as.numeric()),
     female_low = map_dbl(conf_int, ~select(., beta.lower) %>% as.numeric()),
@@ -120,7 +120,7 @@ coverage_combined <- bind_rows(coverage, coverage_bayes) %>%
   pivot_wider(names_from = "ci_tail", values_from = "estimate") %>%
   mutate(
     true_value = case_when(
-      term == "int" ~ 1100,
+      term == "int" ~ 1120,
       term == "pwv" ~ 0.1,
       term == "female" ~ -5
     ),
@@ -137,11 +137,11 @@ p_coverage <- coverage_combined %>%
          method = factor(method) %>% fct_recode("True value" = "true",
                                                 "Observed value" = "observed",
                                                 "Calibrated method" = "calibrated",
-                                                "Bayes measurement error")) %>%
+                                                "Bayes measurement error" = "bayes")) %>%
   ggplot(aes(x = coverage, y = method)) +
   geom_point(position = position_dodge(0.3)) +
   geom_vline(xintercept = 0.95, linetype = "dashed") +
-  facet_wrap(~ term, scales = "free") +
+  facet_wrap(~ term) +
   theme_classic() +
   labs(
     x = "Percent coverage (%)",
