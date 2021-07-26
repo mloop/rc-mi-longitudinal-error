@@ -26,9 +26,12 @@ fit_obs %>% write_rds(file = "../output/02_simple_lm_observed.rds")
 # Perform "calibration method" at visit 1, then use predicted values to fit model
 fit_calib <- sims %>%
   mutate(
-    calib_fit = map(df, ~lm(pwv_visit1_measured_calibration ~ pwv_visit1_measured, data = .)),
-    df_calib = map2(df, calib_fit, ~modelr::add_predictions(.x, model = .y) %>%
-                      mutate(pred_c = scale(pred, scale = FALSE))),
+    calib_fit = map(df, ~lm(pwv_visit2_measured ~ pwv_visit2_measured_calibration, data = .)),  # Perform calibration study
+    df_calib = map2(df, calib_fit, ~modelr::add_predictions(select(.x, pwv_visit1_measured) %>%  # Get predicted new device measurements on old visit 1 measures
+                                                              rename(pwv_visit2_measured_calibration = pwv_visit1_measured), model = .y) %>%
+                      rename(pwv_visit1_measured = pwv_visit2_measured_calibration) %>%
+                      bind_cols(select(.x, -pwv_visit1_measured), .) %>%
+                      mutate(pred_c = scale(pred, scale = FALSE)  %>% as.numeric())),
     fits = map(df_calib, ~lm(pwv_visit2_measured ~ pred_c + female, data = .))
   ) %>%
   select(-calib_fit, -df, -df_calib)

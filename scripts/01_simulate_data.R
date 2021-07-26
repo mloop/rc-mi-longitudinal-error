@@ -7,11 +7,12 @@ n <- 2500
 # Create true values of PWV
 
 sims <- 
-  tibble(iteration = seq(1, 2000, 1)) %>%
-  group_by(iteration) %>%
+  expand_grid(iteration = seq(1, 2000, 1),
+         me_reduction = c(0.9, 0.5, 0.25)) %>%
+  group_by(iteration, me_reduction) %>%
   nest() %>%
   mutate(
-    df = map(iteration, ~tibble(
+    df = map2(iteration, me_reduction, ~tibble(
       id = seq(1, n, 1),
   pwv_visit1 = truncnorm::rtruncnorm(n, mean = 1100, sd = 350, a = 300, b = 2500),
   female = rbinom(n, size = 1, prob = 0.5),
@@ -25,19 +26,15 @@ sims <-
 
       pwv_visit1_measured = truncnorm::rtruncnorm(1, mean = pwv_visit1, sd = 112.8, a = 300, b = 2500) %>% as.numeric(),
 
-  # To use the Hickson vicorder, paper, let's assume the following:
-  #   1. the CV within visit was 2.8% (reported in paper)
-  #   2. the overall mean aPWV in Hickson is 800 cm/s
-  #   3. based on formula for CV, we calculate in-person SD to be 0.028 * 800 = 22.4
-      pwv_visit2_measured = truncnorm::rtruncnorm(1, mean = pwv_visit2, sd = 22.4, a = 300, b = 2500),
+      pwv_visit2_measured = truncnorm::rtruncnorm(1, mean = pwv_visit2, sd = 112.8 * .y, a = 300, b = 2500),
   
-      pwv_visit1_measured_calibration = truncnorm::rtruncnorm(1, mean = pwv_visit1, sd = 22.4, a = 300, b = 2500),
+      pwv_visit2_measured_calibration = truncnorm::rtruncnorm(1, mean = pwv_visit2, sd = 112.8, a = 300, b = 2500),
       
                 ) %>% 
     ungroup() %>%
     mutate(
       pwv_visit1_measured_c = scale(pwv_visit1_measured, scale = FALSE) %>% as.numeric(),
-      pwv_visit1_measured_calibration_c = scale(pwv_visit1_measured_calibration, scale = FALSE) %>% as.numeric()
+      pwv_visit2_measured_calibration_c = scale(pwv_visit2_measured_calibration, scale = FALSE) %>% as.numeric()
     )
             )
 ) %>%

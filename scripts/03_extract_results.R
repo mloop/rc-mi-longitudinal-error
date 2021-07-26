@@ -153,3 +153,37 @@ p_coverage <- coverage_combined %>%
   )
 
 ggsave(filename = "../figs/03_coverage_plot.png", p_coverage)
+
+ci_width_combined <- bind_rows(coverage, coverage_bayes) %>%
+  separate(term, into = c("term", "ci_tail"), sep = "_") %>%
+  pivot_wider(names_from = "ci_tail", values_from = "estimate") %>%
+  mutate(
+    diff = abs(high - low)
+  ) %>%
+  group_by(method, term) %>%
+  summarise(
+    mean_width = mean(diff)
+  )
+
+p_width <- ci_width_combined %>%
+  mutate(term = factor(term) %>% 
+           fct_recode("Intercept" = "int", "Female" = "female", "PWV at visit 1" = "pwv") %>% 
+           fct_reorder(mean_width),
+         method = factor(method) %>% fct_recode("True value" = "true",
+                                                "Observed value" = "observed",
+                                                "Calibrated method" = "calibrated",
+                                                "Bayes measurement error" = "bayes")) %>%
+  ggplot(aes(x = mean_width, y = method)) +
+  geom_point(position = position_dodge(0.3)) +
+  facet_wrap(~ term, scales = "free_x") +
+  theme_classic() +
+  labs(
+    x = "Mean width of confidence interval",
+    y = "",
+    title = "Mean width of confidence interval"
+  ) +
+  theme(
+    plot.title.position = "plot"
+  )
+
+ggsave(filename = "../figs/03_ci_width_plot.png", p_width)
