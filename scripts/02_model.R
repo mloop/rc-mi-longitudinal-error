@@ -47,9 +47,9 @@ plan(multicore, workers = 30)
 
 fit_bayes <- sims %>%
   mutate(
-    data_stan = future_map(df, ~tidybayes::compose_data(.)),
+    data_stan = future_map(df, ~tidybayes::compose_data(.x)),
     fits = future_map(data_stan, ~sampling(me_mod, data = ., iter = 2000, chains = 4,
-                                    pars = c("mu_pwv_1", "sigma_pwv_1", "beta_0", "beta", "beta_1", "sigma"), include = TRUE),
+                                    pars = c("mu_pwv_1", "sigma_pwv_1", "beta_0", "beta_female", "beta_age_c", "beta_diff_c"), include = TRUE),
           seed = TRUE)
   )
 
