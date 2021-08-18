@@ -4,7 +4,7 @@ data {
   vector[n] pwv_visit1_measured;
   vector[n] pwv_visit2_measured;
   vector[n] female;
-  #real<lower = 0, upper = 1> me_reduction;
+  real<lower = 0, upper = 1> me_reduction;
   vector[n] age_centered;
   vector[n] brain_volume;
 }
@@ -42,7 +42,7 @@ model {
   pwv_visit1 ~ normal(mu_pwv_1, sigma_pwv_1);
   pwv_visit2 ~ normal(mu_pwv_2, sigma_pwv_2);
   pwv_visit1_measured ~ normal(pwv_visit1, 112.8);
-  pwv_visit2_measured ~ normal(pwv_visit2, 112.8 * 0.5);
+  pwv_visit2_measured ~ normal(pwv_visit2, 112.8 * me_reduction);
   brain_volume ~ normal(beta_0 + beta_female * female + beta_diff_c * diff_c + beta_age_c * age_centered, sigma);
   
   // priors
@@ -54,5 +54,5 @@ model {
   mu_pwv_1 ~ normal(1100, 200);
   sigma_pwv_1 ~ student_t(1100, 300, 100);
   mu_pwv_2 ~ normal(1100, 200);
-  sigma_pwv_2 ~ student_t(1100, 300, 100);
+  sigma_pwv_2 ~ student_t(1100, 50, 100);
 }
