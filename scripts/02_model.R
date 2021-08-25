@@ -7,10 +7,11 @@ rstan_options(auto_write = TRUE)
 
 sims <- read_rds("../data/01_simulated_data.rds")
 
+dir.create("../output/", showWarnings = FALSE)
 # Fit simple linear regression model to true values
 fit_true <- sims %>%
   mutate(
-    fits = map(df, ~lm(pwv_visit2 ~ pwv_visit1_c + female, data = .))
+    fits = map(df, ~lm(brain_volume ~ true_diff_c + female + age_centered, data = .))
   ) %>%
   select(-df)
 fit_true %>% write_rds(., file = "../output/02_simple_lm.rds")
@@ -18,21 +19,26 @@ fit_true %>% write_rds(., file = "../output/02_simple_lm.rds")
 # Fit simple linear regression model to observed values
 fit_obs <- sims %>%
   mutate(
-    fits = map(df, ~lm(pwv_visit2_measured ~ pwv_visit1_measured_c + female, data = .))
+    fits = map(df, ~lm(brain_volume ~ measured_diff_c + female + age_centered, data = .))
   ) %>%
   select(-df)
 fit_obs %>% write_rds(file = "../output/02_simple_lm_observed.rds")
 
-# Perform "calibration method" at visit 1, then use predicted values to fit model
+# Perform "calibration method" at visit 2, then use predicted values on new machine using data on old machine
 fit_calib <- sims %>%
   mutate(
-    calib_fit = map(df, ~lm(pwv_visit2_measured ~ pwv_visit2_measured_calibration, data = .)),  # Perform calibration study
+    df  = map(df, ~ungroup(.x)),
+    calib_fit = map(df, ~slice_sample(.x, n = 50) %>% lm(pwv_visit2_measured ~ pwv_visit2_measured_calibration, data = .)),  # Perform calibration study
     df_calib = map2(df, calib_fit, ~modelr::add_predictions(select(.x, pwv_visit1_measured) %>%  # Get predicted new device measurements on old visit 1 measures
                                                               rename(pwv_visit2_measured_calibration = pwv_visit1_measured), model = .y) %>%
                       rename(pwv_visit1_measured = pwv_visit2_measured_calibration) %>%
                       bind_cols(select(.x, -pwv_visit1_measured), .) %>%
-                      mutate(pred_c = scale(pred, scale = FALSE)  %>% as.numeric())),
-    fits = map(df_calib, ~lm(pwv_visit2_measured ~ pred_c + female, data = .))
+                      mutate(
+                        pred_diff = pwv_visit2_measured - pred,
+                        pred_diff_c = scale(pred_diff, scale = FALSE)  %>% as.numeric()
+                      )
+    ),
+    fits = map(df_calib, ~lm(brain_volume ~ pred_diff_c + female + age_centered, data = .))
   ) %>%
   select(-calib_fit, -df, -df_calib)
 fit_calib %>% write_rds(file = "../output/02_simple_lm_calib.rds")
@@ -43,7 +49,7 @@ me_mod <- stan_model(file = "02_model.stan")
 
 library(furrr)
 
-plan(multicore, workers = 30)
+plan(multicore, workers = 40)
 
 fit_bayes <- sims %>%
   mutate(

@@ -7,7 +7,7 @@ n <- 2500
 # Create true values of PWV
 
 sims <- 
-  expand_grid(iteration = seq(1, 2, 1),
+  expand_grid(iteration = seq(1, 200, 1),
          me_reduction = c(0.9, 0.5, 0.25)) %>%
   group_by(iteration, me_reduction) %>%
   nest() %>%
