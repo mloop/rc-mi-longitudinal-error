@@ -13,8 +13,9 @@ bias <- bind_rows(fit_true %>% select(iteration, fits) %>% mutate(method = "true
                   fit_calib %>% select(iteration, fits) %>% mutate(method = "calibrated")) %>%
   mutate(
     bhat_int = map_dbl(fits, ~coefficients(.)[1]),
-    bhat_pwv = map_dbl(fits, ~coefficients(.)[2]),
+    bhat_diff_c = map_dbl(fits, ~coefficients(.)[2]),
     bhat_female = map_dbl(fits, ~coefficients(.)[3]),
+    bhat_age_c = map_dbl(fits, ~coefficients(.)[4]),
     hat_sigma = map_dbl(fits, ~sigma(.))
   ) %>%
   select(-fits) %>%
@@ -29,8 +30,9 @@ bias_bayes <- fit_bayes %>%
                   as_tibble() %>%
                   summarise_all(mean)),
     bhat_int = map_dbl(coefficients, ~select(., beta_0) %>% as.numeric()),
-    bhat_pwv = map_dbl(coefficients, ~select(., beta_1) %>% as.numeric()),
-    bhat_female = map_dbl(coefficients, ~select(., beta) %>% as.numeric()),
+    bhat_diff_c = map_dbl(coefficients, ~select(., beta_diff_c) %>% as.numeric()),
+    bhat_female = map_dbl(coefficients, ~select(., beta_female) %>% as.numeric()),
+    bhat_age_c = map_dbl(coefficients, ~select(., beta_age_c) %>% as.numeric()),
     hat_sigma = map_dbl(coefficients, ~select(., sigma) %>% as.numeric()),
   ) %>%
   select(-fits, -df, -data_stan, -coefficients) %>%
@@ -45,10 +47,11 @@ bias_combined <- bind_rows(bias, bias_bayes) %>%
   summarise(mean_estimate = mean(estimate)) %>%
   mutate(
     true_value = case_when(
-      term == "bhat_int" ~ 1120,
-      term == "bhat_pwv" ~ 0.1,
-      term == "bhat_female" ~ -5,
-      term == "hat_sigma" ~ 50
+      term == "bhat_int" ~ 1000,
+      term == "bhat_diff_c" ~ -0.2,
+      term == "bhat_female" ~ -125.217,
+      term == "bhat_age_c" ~ -4.267,
+      term == "hat_sigma" ~ 107
     ),
     bias = mean_estimate - true_value,
     percent_bias = (mean_estimate - true_value) / true_value * 100
@@ -56,7 +59,7 @@ bias_combined <- bind_rows(bias, bias_bayes) %>%
 
 p_bias <- bias_combined %>%
   mutate(term = factor(term) %>% 
-           fct_recode("Residual standard deviation" = "hat_sigma", "Intercept" = "bhat_int", "Female" = "bhat_female", "PWV at visit 1" = "bhat_pwv") %>% 
+           fct_recode("Residual standard deviation" = "hat_sigma", "Intercept" = "bhat_int", "Female" = "bhat_female", "PWV difference (centered)" = "bhat_diff_c", "Age (centered)" = "bhat_age_c") %>% 
            fct_reorder(percent_bias),
          method = factor(method) %>% fct_recode("True value" = "true",
                                                 "Observed value" = "observed",
@@ -75,7 +78,7 @@ p_bias <- bias_combined %>%
     plot.title.position = "plot"
   )
 
-ggsave(filename = "../figs/03_bias_plot.png", p_bias)
+ggsave(filename = "../figs/03_bias_plot.pdf", p_bias)
 
 coverage <- bind_rows(fit_true %>% select(iteration, fits) %>% mutate(method = "true"),
                       fit_obs %>% select(iteration, fits) %>% mutate(method = "observed"),
@@ -84,10 +87,12 @@ coverage <- bind_rows(fit_true %>% select(iteration, fits) %>% mutate(method = "
     conf_intervals = map(fits, ~confint(.)),
     int_low = map_dbl(conf_intervals, ~.[1, 1]),
     int_high = map_dbl(conf_intervals, ~.[1, 2]),
-    pwv_low = map_dbl(conf_intervals, ~.[2, 1]),
-    pwv_high = map_dbl(conf_intervals, ~.[2, 2]),
+    diff_c_low = map_dbl(conf_intervals, ~.[2, 1]),
+    diff_c_high = map_dbl(conf_intervals, ~.[2, 2]),
     female_low = map_dbl(conf_intervals, ~.[3, 1]),
     female_high = map_dbl(conf_intervals, ~.[3, 2]),
+    age_c_low = map_dbl(conf_intervals, ~.[4, 1]),
+    age_c_high = map_dbl(conf_intervals, ~.[4, 2])
   ) %>%
   select(-fits, -conf_intervals) %>%
   pivot_longer(cols = contains("_"),
@@ -97,14 +102,16 @@ coverage <- bind_rows(fit_true %>% select(iteration, fits) %>% mutate(method = "
 
 coverage_bayes <- fit_bayes %>%
   mutate(
-    conf_int = map(fits, ~spread_draws(., beta_0, beta, beta_1) %>% 
+    conf_int = map(fits, ~spread_draws(., beta_0, beta_diff_c, beta_female, beta_age_c) %>% 
                          mean_qi()),
     int_low = map_dbl(conf_int, ~select(., beta_0.lower) %>% as.numeric()),
     int_high = map_dbl(conf_int, ~select(., beta_0.upper) %>% as.numeric()),
-    pwv_low = map_dbl(conf_int, ~select(., beta_1.lower) %>% as.numeric()),
-    pwv_high = map_dbl(conf_int, ~select(., beta_1.upper) %>% as.numeric()),
-    female_low = map_dbl(conf_int, ~select(., beta.lower) %>% as.numeric()),
-    female_high = map_dbl(conf_int, ~select(., beta.upper) %>% as.numeric())
+    diff_c_low = map_dbl(conf_int, ~select(., beta_diff_c.lower) %>% as.numeric()),
+    diff_c_high = map_dbl(conf_int, ~select(., beta_diff_c.upper) %>% as.numeric()),
+    female_low = map_dbl(conf_int, ~select(., beta_female.lower) %>% as.numeric()),
+    female_high = map_dbl(conf_int, ~select(., beta_female.upper) %>% as.numeric()),
+    age_c_low = map_dbl(conf_int, ~select(., beta_age_c.lower) %>% as.numeric()),
+    age_c_high = map_dbl(conf_int, ~select(., beta_age_c.upper) %>% as.numeric()),
     ) %>%
   select(-fits, -conf_int, -df, -data_stan) %>%
   pivot_longer(cols = contains("_"),
@@ -120,9 +127,10 @@ coverage_combined <- bind_rows(coverage, coverage_bayes) %>%
   pivot_wider(names_from = "ci_tail", values_from = "estimate") %>%
   mutate(
     true_value = case_when(
-      term == "int" ~ 1120,
-      term == "pwv" ~ 0.1,
-      term == "female" ~ -5
+      term == "bhat_int" ~ 1000,
+      term == "bhat_diff_c" ~ -0.2,
+      term == "bhat_female" ~ -125.217,
+      term == "bhat_age_c" ~ -4.267
     ),
     covered = if_else(true_value > low & true_value < high, 1, 0)
   ) %>%
