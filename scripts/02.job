@@ -3,7 +3,7 @@
 #SBATCH -p 528_queue
 #SBATCH -N 4
 #SBATCH --ntasks-per-node=40
-#SBATCH -t 1-
+#SBATCH -t 4-
 
 module load r/4.0.3
 module load gcc/6.3.0
