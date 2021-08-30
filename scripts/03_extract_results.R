@@ -8,20 +8,11 @@ fit_obs <- read_rds("../output/02_simple_lm_observed.rds")
 fit_calib <- read_rds("../output/02_simple_lm_calib.rds")
 fit_bayes <- read_rds("../output/02_bayes_mem.rds")
 
-bias <- bind_rows(fit_true %>% select(iteration, fits) %>% mutate(method = "true"),
-                  fit_obs %>% select(iteration, fits) %>% mutate(method = "observed"),
-                  fit_calib %>% select(iteration, fits) %>% mutate(method = "calibrated")) %>%
-  mutate(
-    bhat_int = map_dbl(fits, ~coefficients(.)[1]),
-    bhat_diff_c = map_dbl(fits, ~coefficients(.)[2]),
-    bhat_female = map_dbl(fits, ~coefficients(.)[3]),
-    bhat_age_c = map_dbl(fits, ~coefficients(.)[4]),
-    hat_sigma = map_dbl(fits, ~sigma(.))
-  ) %>%
-  select(-fits) %>%
-  pivot_longer(cols = contains("hat"),
-               names_to = "term",
-               values_to = "estimate") %>%
+bias <- bind_rows(fit_true %>% select(iteration, me_reduction, fits) %>% mutate(method = "true"),
+                  fit_obs %>% select(iteration, me_reduction, fits) %>% mutate(method = "observed"),
+                  fit_calib %>% select(iteration, me_reduction, fits) %>% mutate(method = "calibrated")) %>%
+  unnest(fits) %>%
+  select(-p.value, -statistic) %>%
   ungroup()
 
 bias_bayes <- fit_bayes %>%
@@ -44,13 +35,18 @@ bias_bayes <- fit_bayes %>%
 
 bias_combined <- bind_rows(bias, bias_bayes) %>%
   group_by(method, term) %>%
+  filter(term != "hat_sigma") %>%
   summarise(mean_estimate = mean(estimate)) %>%
   mutate(
+    term = if_else(str_detect(term, "diff"), "diff_c", term),
+    term = if_else(term == "bhat_age_c", "age_centered", term),
+    term = if_else(term == "bhat_int", "(Intercept)", term),
+    term = if_else(term == "bhat_female", "female", term),
     true_value = case_when(
-      term == "bhat_int" ~ 1000,
-      term == "bhat_diff_c" ~ -0.2,
-      term == "bhat_female" ~ -125.217,
-      term == "bhat_age_c" ~ -4.267,
+      term == "(Intercept)" ~ 1000,
+      term == "diff_c" ~ -0.2,
+      term == "female" ~ -125.217,
+      term == "age_centered" ~ -4.267,
       term == "hat_sigma" ~ 107
     ),
     bias = mean_estimate - true_value,
@@ -59,7 +55,7 @@ bias_combined <- bind_rows(bias, bias_bayes) %>%
 
 p_bias <- bias_combined %>%
   mutate(term = factor(term) %>% 
-           fct_recode("Residual standard deviation" = "hat_sigma", "Intercept" = "bhat_int", "Female" = "bhat_female", "PWV difference (centered)" = "bhat_diff_c", "Age (centered)" = "bhat_age_c") %>% 
+           fct_recode("Intercept" = "(Intercept)", "Female" = "female", "PWV difference (centered)" = "diff_c", "Age (centered)" = "age_centered") %>% 
            fct_reorder(percent_bias),
          method = factor(method) %>% fct_recode("True value" = "true",
                                                 "Observed value" = "observed",
