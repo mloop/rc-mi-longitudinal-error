@@ -1,6 +1,7 @@
 library(tidyverse)
 library(rstan)
 library(tidybayes)
+library(broom)
  
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
@@ -11,7 +12,8 @@ dir.create("../output/", showWarnings = FALSE)
 # Fit simple linear regression model to true values
 fit_true <- sims %>%
   mutate(
-    fits = map(df, ~lm(brain_volume ~ true_diff_c + female + age_centered, data = .))
+    fits = map(df, ~lm(brain_volume ~ true_diff_c + female + age_centered, data = .) %>%
+                 tidy())
   ) %>%
   select(-df)
 fit_true %>% write_rds(., file = "../output/02_simple_lm.rds")
@@ -19,7 +21,8 @@ fit_true %>% write_rds(., file = "../output/02_simple_lm.rds")
 # Fit simple linear regression model to observed values
 fit_obs <- sims %>%
   mutate(
-    fits = map(df, ~lm(brain_volume ~ measured_diff_c + female + age_centered, data = .))
+    fits = map(df, ~lm(brain_volume ~ measured_diff_c + female + age_centered, data = .) %>%
+                 tidy())
   ) %>%
   select(-df)
 fit_obs %>% write_rds(file = "../output/02_simple_lm_observed.rds")
@@ -38,7 +41,8 @@ fit_calib <- sims %>%
                         pred_diff_c = scale(pred_diff, scale = FALSE)  %>% as.numeric()
                       )
     ),
-    fits = map(df_calib, ~lm(brain_volume ~ pred_diff_c + female + age_centered, data = .))
+    fits = map(df_calib, ~lm(brain_volume ~ pred_diff_c + female + age_centered, data = .) %>%
+                 tidy())
   ) %>%
   select(-calib_fit, -df, -df_calib)
 fit_calib %>% write_rds(file = "../output/02_simple_lm_calib.rds")

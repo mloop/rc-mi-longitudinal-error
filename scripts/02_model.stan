@@ -1,4 +1,3 @@
-
 data {
   int<lower=0> n;
   vector[n] pwv_visit1_measured;
@@ -46,9 +45,9 @@ model {
   brain_volume ~ normal(beta_0 + beta_female * female + beta_diff_c * diff_c + beta_age_c * age_centered, sigma);
   
   // priors
-  beta_0 ~ normal(1120, 10);
+  beta_0 ~ normal(1000, 200);
   sigma ~ student_t(50, 3, 10);
-  beta_female ~ normal(0, 5);
+  beta_female ~ normal(0, 200);
   beta_diff_c ~ normal(0, 5);
   beta_age_c ~ normal(0, 5);
   mu_pwv_1 ~ normal(1100, 200);
