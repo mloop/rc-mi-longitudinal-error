@@ -34,7 +34,7 @@ bias_bayes <- fit_bayes %>%
   ungroup()
 
 bias_combined <- bind_rows(bias, bias_bayes) %>%
-  group_by(method, term) %>%
+  group_by(me_reduction, method, term) %>%
   filter(term != "hat_sigma") %>%
   summarise(mean_estimate = mean(estimate)) %>%
   mutate(
@@ -60,15 +60,17 @@ p_bias <- bias_combined %>%
          method = factor(method) %>% fct_recode("True value" = "true",
                                                 "Observed value" = "observed",
                                                 "Calibrated value" = "calibrated",
-                                                "Bayes measurement error" = "bayes")) %>%
+                                                "Bayes measurement error" = "bayes"),
+         me_reduction = factor(me_reduction) %>% fct_recode("25% reduction" = "0.25", "50% reduction" = "0.5", "90% reduction" = "0.9")) %>%
   ggplot(aes(x = percent_bias, y = term, color = method)) +
   geom_point(position = position_dodge(0.3)) +
-  scale_color_nejm(name = "") +
+  scale_color_manual(name = "", values = c("red", "blue", "orange", "black")) +
   theme_classic() +
+  facet_wrap(~ me_reduction, ncol = 1) +
   labs(
     x = "Percent bias (%)",
     y = "",
-    title = "Percent bias for each regression parameter and\nresidual standard deviation, by data analyzed"
+    title = "Percent bias for each regression parameter by method of data analysis and percent\nmeasurement error reduction with newer device"
   ) +
   theme(
     plot.title.position = "plot"
@@ -76,43 +78,29 @@ p_bias <- bias_combined %>%
 
 ggsave(filename = "../figs/03_bias_plot.pdf", p_bias)
 
-coverage <- bind_rows(fit_true %>% select(iteration, fits) %>% mutate(method = "true"),
-                      fit_obs %>% select(iteration, fits) %>% mutate(method = "observed"),
-                      fit_calib %>% select(iteration, fits) %>% mutate(method = "calibrated")) %>%
+coverage <- bind_rows(fit_true %>% select(iteration, me_reduction, fits) %>% mutate(method = "true"),
+                      fit_obs %>% select(iteration, me_reduction, fits) %>% mutate(method = "observed"),
+                      fit_calib %>% select(iteration, me_reduction, fits) %>% mutate(method = "calibrated")) %>%
+  unnest(fits) %>%
+  select(-p.value, -statistic) %>%
+  ungroup() %>%
   mutate(
-    conf_intervals = map(fits, ~confint(.)),
-    int_low = map_dbl(conf_intervals, ~.[1, 1]),
-    int_high = map_dbl(conf_intervals, ~.[1, 2]),
-    diff_c_low = map_dbl(conf_intervals, ~.[2, 1]),
-    diff_c_high = map_dbl(conf_intervals, ~.[2, 2]),
-    female_low = map_dbl(conf_intervals, ~.[3, 1]),
-    female_high = map_dbl(conf_intervals, ~.[3, 2]),
-    age_c_low = map_dbl(conf_intervals, ~.[4, 1]),
-    age_c_high = map_dbl(conf_intervals, ~.[4, 2])
-  ) %>%
-  select(-fits, -conf_intervals) %>%
-  pivot_longer(cols = contains("_"),
-                                             names_to = "term",
-                                             values_to = "estimate") %>%
-  ungroup()
+    low = estimate - 1.96 * std.error,
+    high = estimate + 1.96 * std.error
+  )
 
 coverage_bayes <- fit_bayes %>%
   mutate(
-    conf_int = map(fits, ~spread_draws(., beta_0, beta_diff_c, beta_female, beta_age_c) %>% 
-                         mean_qi()),
-    int_low = map_dbl(conf_int, ~select(., beta_0.lower) %>% as.numeric()),
-    int_high = map_dbl(conf_int, ~select(., beta_0.upper) %>% as.numeric()),
-    diff_c_low = map_dbl(conf_int, ~select(., beta_diff_c.lower) %>% as.numeric()),
-    diff_c_high = map_dbl(conf_int, ~select(., beta_diff_c.upper) %>% as.numeric()),
-    female_low = map_dbl(conf_int, ~select(., beta_female.lower) %>% as.numeric()),
-    female_high = map_dbl(conf_int, ~select(., beta_female.upper) %>% as.numeric()),
-    age_c_low = map_dbl(conf_int, ~select(., beta_age_c.lower) %>% as.numeric()),
-    age_c_high = map_dbl(conf_int, ~select(., beta_age_c.upper) %>% as.numeric()),
+    conf_int = map(fits, ~gather_draws(., beta_0, beta_diff_c, beta_female, beta_age_c) %>%
+                     ungroup() %>%
+                     group_by(.variable) %>%
+                     summarise(
+                       low = quantile(.value, 0.025),
+                       high = quantile(.value, 0.975)
+                     ))
     ) %>%
-  select(-fits, -conf_int, -df, -data_stan) %>%
-  pivot_longer(cols = contains("_"),
-               names_to = "term",
-               values_to = "estimate") %>%
+  select(-fits, -df, -data_stan) %>%
+  unnest(conf_int) %>%
   ungroup() %>%
   mutate(
     method = "bayes"
