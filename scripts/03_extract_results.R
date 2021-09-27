@@ -106,34 +106,41 @@ coverage_bayes <- fit_bayes %>%
     method = "bayes"
   )
 
-coverage_combined <- bind_rows(coverage, coverage_bayes) %>%
-  separate(term, into = c("term", "ci_tail"), sep = "_") %>%
-  pivot_wider(names_from = "ci_tail", values_from = "estimate") %>%
+coverage_combined <- bind_rows(coverage, rename(coverage_bayes, term = .variable)) %>%
   mutate(
-    true_value = case_when(
-      term == "bhat_int" ~ 1000,
-      term == "bhat_diff_c" ~ -0.2,
-      term == "bhat_female" ~ -125.217,
-      term == "bhat_age_c" ~ -4.267
-    ),
+    term = if_else(str_detect(term, "diff"), "diff_c", term),
+    term = if_else(term == "beta_age_c", "age_centered", term),
+    term = if_else(term == "beta_int", "(Intercept)", term),
+    term = if_else(term == "beta_0", "(Intercept)", term),
+    term = if_else(term == "beta_female", "female", term)
+  ) %>%
+  mutate(
+  true_value = case_when(
+    term == "(Intercept)" ~ 1000,
+    term == "diff_c" ~ -0.2,
+    term == "female" ~ -125.217,
+    term == "age_centered" ~ -4.267,
+    term == "hat_sigma" ~ 107
+  ),
     covered = if_else(true_value > low & true_value < high, 1, 0)
   ) %>%
-  group_by(method, term) %>%
+  group_by(me_reduction, method, term) %>%
   summarise(coverage = mean(covered))
 
 
 p_coverage <- coverage_combined %>%
   mutate(term = factor(term) %>% 
-           fct_recode("Intercept" = "int", "Female" = "female", "PWV at visit 1" = "pwv") %>% 
+           fct_recode("Intercept" = "(Intercept)", "Female" = "female", "PWV difference (centered)" = "diff_c", "Age (centered)" = "age_centered") %>% 
            fct_reorder(coverage),
          method = factor(method) %>% fct_recode("True value" = "true",
                                                 "Observed value" = "observed",
-                                                "Calibrated method" = "calibrated",
-                                                "Bayes measurement error" = "bayes")) %>%
-  ggplot(aes(x = coverage, y = method)) +
+                                                "Calibrated value" = "calibrated",
+                                                "Bayes measurement error" = "bayes"),
+         me_reduction = factor(me_reduction) %>% fct_recode("25% reduction" = "0.25", "50% reduction" = "0.5", "90% reduction" = "0.9"))  %>%
+  ggplot(aes(x = coverage, y = term, color = method)) +
   geom_point(position = position_dodge(0.3)) +
   geom_vline(xintercept = 0.95, linetype = "dashed") +
-  facet_wrap(~ term) +
+  facet_wrap(~ me_reduction) +
   theme_classic() +
   labs(
     x = "Percent coverage (%)",
@@ -146,33 +153,61 @@ p_coverage <- coverage_combined %>%
 
 ggsave(filename = "../figs/03_coverage_plot.png", p_coverage)
 
-ci_width_combined <- bind_rows(coverage, coverage_bayes) %>%
-  separate(term, into = c("term", "ci_tail"), sep = "_") %>%
-  pivot_wider(names_from = "ci_tail", values_from = "estimate") %>%
+ci_width <- bind_rows(fit_true %>% select(iteration, me_reduction, fits) %>% mutate(method = "true"),
+                                  fit_obs %>% select(iteration, me_reduction, fits) %>% mutate(method = "observed"),
+                                  fit_calib %>% select(iteration, me_reduction, fits) %>% mutate(method = "calibrated")) %>%
+  unnest(fits) %>%
+  select(-p.value, -statistic) %>%
+  ungroup() %>%
   mutate(
-    diff = abs(high - low)
-  ) %>%
-  group_by(method, term) %>%
-  summarise(
-    mean_width = mean(diff)
+    ci_width = 2 * 1.96 * std.error
   )
+
+ci_width_bayes <- fit_bayes %>%
+  mutate(
+    ci = map(fits, ~gather_draws(., beta_0, beta_diff_c, beta_female, beta_age_c) %>%
+                     ungroup() %>%
+                     group_by(.variable) %>%
+                     summarise(
+                       ci_width = quantile(.value, probs = 0.975) - quantile(.value, probs = 0.025)
+                     ))
+  ) %>%
+  select(-fits, -df, -data_stan) %>%
+  unnest(ci) %>%
+  ungroup() %>%
+  mutate(
+    method = "bayes"
+  )
+
+ci_width_combined <- bind_rows(ci_width, rename(ci_width_bayes, term = .variable)) %>%
+  mutate(
+    term = if_else(str_detect(term, "diff"), "diff_c", term),
+    term = if_else(term == "beta_age_c", "age_centered", term),
+    term = if_else(term == "beta_int", "(Intercept)", term),
+    term = if_else(term == "beta_0", "(Intercept)", term),
+    term = if_else(term == "beta_female", "female", term)
+  ) %>%
+  ungroup() %>%
+  group_by(me_reduction, method, term) %>%
+  summarise(mean_width = mean(ci_width))
 
 p_width <- ci_width_combined %>%
   mutate(term = factor(term) %>% 
-           fct_recode("Intercept" = "int", "Female" = "female", "PWV at visit 1" = "pwv") %>% 
+           fct_recode("Intercept" = "(Intercept)", "Female" = "female", "PWV difference (centered)" = "diff_c", "Age (centered)" = "age_centered") %>% 
            fct_reorder(mean_width),
          method = factor(method) %>% fct_recode("True value" = "true",
                                                 "Observed value" = "observed",
-                                                "Calibrated method" = "calibrated",
-                                                "Bayes measurement error" = "bayes")) %>%
-  ggplot(aes(x = mean_width, y = method)) +
+                                                "Calibrated value" = "calibrated",
+                                                "Bayes measurement error" = "bayes"),
+         me_reduction = factor(me_reduction) %>% fct_recode("25% reduction" = "0.25", "50% reduction" = "0.5", "90% reduction" = "0.9"))  %>%
+  ggplot(aes(x = mean_width, y = term, color = method)) +
   geom_point(position = position_dodge(0.3)) +
-  facet_wrap(~ term, scales = "free_x") +
+  facet_wrap(~ me_reduction) +
   theme_classic() +
   labs(
-    x = "Mean width of confidence interval",
+    x = "Mean width of confidence / credible interval",
     y = "",
-    title = "Mean width of confidence interval"
+    title = "Mean width of 95% confidence / credible interval"
   ) +
   theme(
     plot.title.position = "plot"
