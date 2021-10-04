@@ -53,6 +53,8 @@ bias_combined <- bind_rows(bias, bias_bayes) %>%
     percent_bias = (mean_estimate - true_value) / true_value * 100
   )
 
+write_tsv(bias_combined, file = "../output/03_bias_combined.txt")
+
 p_bias <- bias_combined %>%
   mutate(term = factor(term) %>% 
            fct_recode("Intercept" = "(Intercept)", "Female" = "female", "PWV difference (centered)" = "diff_c", "Age (centered)" = "age_centered") %>% 
@@ -127,6 +129,7 @@ coverage_combined <- bind_rows(coverage, rename(coverage_bayes, term = .variable
   group_by(me_reduction, method, term) %>%
   summarise(coverage = mean(covered))
 
+write_tsv(coverage_combined, file = "../output/03_coverage_combined.txt")
 
 p_coverage <- coverage_combined %>%
   mutate(term = factor(term) %>% 
@@ -190,6 +193,8 @@ ci_width_combined <- bind_rows(ci_width, rename(ci_width_bayes, term = .variable
   ungroup() %>%
   group_by(me_reduction, method, term) %>%
   summarise(mean_width = mean(ci_width))
+
+write_tsv(ci_width_combined, file = "../output/03_ci_width_combined.txt")
 
 p_width <- ci_width_combined %>%
   mutate(term = factor(term) %>% 
