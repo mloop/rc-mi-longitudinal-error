@@ -63,7 +63,7 @@ p_bias <- bias_combined %>%
                                                 "Observed value" = "observed",
                                                 "Calibrated value" = "calibrated",
                                                 "Bayes measurement error" = "bayes"),
-         me_reduction = factor(me_reduction) %>% fct_recode("25% reduction" = "0.25", "50% reduction" = "0.5", "90% reduction" = "0.9")) %>%
+         me_reduction = factor(me_reduction) %>% fct_recode("75% more precise" = "0.25", "50% more precise" = "0.5", "10% more precise" = "0.9")) %>%
   ggplot(aes(x = percent_bias, y = term, color = method)) +
   geom_point(position = position_dodge(0.3)) +
   scale_color_manual(name = "", values = c("red", "blue", "orange", "black")) +
@@ -72,13 +72,13 @@ p_bias <- bias_combined %>%
   labs(
     x = "Percent bias (%)",
     y = "",
-    title = "Percent bias for each regression parameter by method of data analysis and percent\nmeasurement error reduction with newer device"
+    title = "Percent bias for each regression parameter by method of data analysis and\nhow much more precise the newer machine is"
   ) +
   theme(
     plot.title.position = "plot"
   )
 
-ggsave(filename = "../figs/03_bias_plot.pdf", p_bias)
+ggsave(filename = "../figs/03_bias_plot.pdf", p_bias, width = 7, height = 7, units = "in")
 
 coverage <- bind_rows(fit_true %>% select(iteration, me_reduction, fits) %>% mutate(method = "true"),
                       fit_obs %>% select(iteration, me_reduction, fits) %>% mutate(method = "observed"),
@@ -139,8 +139,9 @@ p_coverage <- coverage_combined %>%
                                                 "Observed value" = "observed",
                                                 "Calibrated value" = "calibrated",
                                                 "Bayes measurement error" = "bayes"),
-         me_reduction = factor(me_reduction) %>% fct_recode("25% reduction" = "0.25", "50% reduction" = "0.5", "90% reduction" = "0.9"))  %>%
-  ggplot(aes(x = coverage, y = term, color = method)) +
+         me_reduction = factor(me_reduction) %>% fct_recode("75% more precise" = "0.25", "50% more precise" = "0.5", "10% more precise" = "0.9")) %>%
+  filter(term == "PWV difference (centered)") %>%
+  ggplot(aes(x = coverage, y = method)) +
   geom_point(position = position_dodge(0.3)) +
   geom_vline(xintercept = 0.95, linetype = "dashed") +
   facet_wrap(~ me_reduction) +
@@ -148,13 +149,13 @@ p_coverage <- coverage_combined %>%
   labs(
     x = "Percent coverage (%)",
     y = "",
-    title = "Percent coverage for each regression parameter, by data analyzed"
+    title = "Percent coverage for each method, by reduction in measurement error"
   ) +
   theme(
     plot.title.position = "plot"
   )
 
-ggsave(filename = "../figs/03_coverage_plot.png", p_coverage)
+ggsave(filename = "../figs/03_coverage_plot.pdf", p_coverage, width = 9, height = 3, units = "in")
 
 ci_width <- bind_rows(fit_true %>% select(iteration, me_reduction, fits) %>% mutate(method = "true"),
                                   fit_obs %>% select(iteration, me_reduction, fits) %>% mutate(method = "observed"),
@@ -204,8 +205,9 @@ p_width <- ci_width_combined %>%
                                                 "Observed value" = "observed",
                                                 "Calibrated value" = "calibrated",
                                                 "Bayes measurement error" = "bayes"),
-         me_reduction = factor(me_reduction) %>% fct_recode("25% reduction" = "0.25", "50% reduction" = "0.5", "90% reduction" = "0.9"))  %>%
-  ggplot(aes(x = mean_width, y = term, color = method)) +
+         me_reduction = factor(me_reduction) %>% fct_recode("75% more precise" = "0.25", "50% more precise" = "0.5", "10% more precise" = "0.9")) %>%
+  filter(term == "PWV difference (centered)") %>%
+  ggplot(aes(x = mean_width, y = method)) +
   geom_point(position = position_dodge(0.3)) +
   facet_wrap(~ me_reduction) +
   theme_classic() +
@@ -218,4 +220,4 @@ p_width <- ci_width_combined %>%
     plot.title.position = "plot"
   )
 
-ggsave(filename = "../figs/03_ci_width_plot.png", p_width)
+ggsave(filename = "../figs/03_ci_width_plot.pdf", p_width, width = 11, height = 6, units = "in")

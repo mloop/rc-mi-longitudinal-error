@@ -8,7 +8,7 @@ n <- 2500
 
 sims <- 
   expand_grid(iteration = seq(1, 2000, 1),
-         me_reduction = c(0.9, 0.5, 0.25)) %>%
+         me_reduction = c(0.9, 0.5, 0.25)) %>%  # 10% reduction in me, 50%, and 75%
   group_by(iteration, me_reduction) %>%
   nest() %>%
   mutate(
