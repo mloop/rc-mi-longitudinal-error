@@ -1,6 +1,8 @@
 ---
-title: "Model"
-output: html_document
+title: "Model formulation for pulse wave velocity measurement error project"
+author: Matthew Shane Loop and Sarah Lotspeich
+date: "Last updated on: `r Sys.Date()`"
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -9,53 +11,59 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Data story
 
-Assume that we have collected pulse wave velocity (PWV) on a set of 2,500 participants at two time points, 5 years apart. However, we used a different machine at the first visit than the second visit. The two machines have known measurement error. Therefore, we will try to build a model that can use both measurements to calculate a valid 5-year difference in PWV.
+Assume that we have collected pulse wave velocity (PWV) on a set of 2,500 participants at two time points, 5 years apart. We are interested in understanding how change in PWV may be associated with total brain volume. However, we used a different machine at the first visit than the second visit. The two machines have known measurement error. Therefore, we will try to build a model that accounts for the measurement error in each machine and estimates the estimand of interest (i.e., linear regression parameter for a 1-unit change in PWV and mean change in total brain volume).
 
-# Fake data simulation
+# Notation
 
-$$
-PWV_{1, i} \sim truncNorm(\mu = 1100, \sigma = 350, a = 350, b = 2400)
-$$
+* Let the baseline and follow up measurements be represented by $B$ and $F$, respectively. 
+* Let a measurement on the old machine and the new machine be represented by $O$ and $N$, respectively. 
+* Let a "$\tilde{\dots}$" represent a random variable measured with error.
+* Let a "$\hat{\dots}$" represent an estimated quantity. 
 
-$$
-PWV_{2, i} \sim truncNorm(\mu = 1120 + 0.9 * centered\_scaled(PWV_{1,i}) - 5 * female_i, \sigma = 50, a = 350, 5 = 2400)
-$$
+# Models for true values and values measured with error
 
-Each of these quantities, PWV at visits 1 and 2, are measured with error. The error is generated as follows:
+$$PWV_{B,i} \sim N(\mu_B, \sigma_B)$$
 
-$$
-PWV\_measured_{1,i} \sim truncNorm(\mu = PWV_{1,i}, sigma = 112.8, a = 350, b = 2400)
-$$
+$$PWV_{F,i} \sim N(\mu_{F,i} = \beta_0 + PWV_{B,i}\beta_1 + \mathbf{X}_i \boldsymbol{\beta}, \sigma_F)$$
 
-$$
-PWV\_measured_{2,i} \sim truncNorm(\mu = PWV_{2,i}, sigma = 22.4, a = 350, b = 2400)
-$$
+$$\widetilde{PWV}_{B,i}^O \sim N(PWV_{B,i}, \sigma_B^O)$$
 
-The measurement error for the machine used at visit 2 was much smaller.
+$$\widetilde{PWV}_{F,i}^N \sim N(PWV_{F,i}, \sigma_F^N)$$
 
-# Model
+* Assume that $\sigma_B^O = \sigma_F^O$, which is unobserved. Also assume that $\sigma_F^N = \sigma_B^N$, which is also unobserved. Neither of these unobserved quantities are of interest. We are just assuming the measurement error for a device is the same, regardless of when the measurement is taken.
 
-The likelihood of the model being fit is:
+These models assume a **classical measurement error model**.
 
-```
-pwv_visit1 ~ normal(mu_pwv_1, sigma_pwv_1);
-pwv_visit1_measured ~ normal(pwv_visit1, 112.8);
-pwv_visit2_measured ~ normal(pwv_visit2, 22.4);
-pwv_visit2 ~ normal(beta_0 + beta_1 * female + beta_2 * pwv_visit1, sigma);
-```
+For the outcome model, we are assuming the model is
+$$Y_{F,i} \sim N(\mu_{Y_{F,i}} = \omega_0 + \Delta PWV_i\omega_1 + \mathbf{Z}_i\boldsymbol\omega, \sigma_{Y_F})$$
+$\omega_1$ is the estimand of interest for the project.
 
-with priors
+# Calibration method
 
-```
-beta_0 ~ normal(1100, 350);
-sigma ~ student_t(50, 3, 10);
-beta_1 ~ normal(0, 1);
-beta_2 ~ normal(0, 1);
-mu_pwv_1 ~ normal(1100, 100);
-sigma_pwv_1 ~ student_t(1100, 300, 100);
-```
-# Problem
+Now we describe how the calibration method might be used. Assume there is a subsample $m$ of the total sample $n$, $m \in n$. Let $i$ be an index for observations from $1,\dots,n$ and $j$ be an index for observations from $1,\dots,m$.
 
-* I am having a great deal of trouble getting an identifiable model. Specifically, after 5,000 iterations, the `Rhat` for the variance of the PWV at visit 1 is still 2.1. The effect of female sex (`beta_1`) is way off. It should be -5, but it's -0.5. All other parameters seem to be estimated alright. The residual variance is overestimated by about 20%.
+Assume that we conduct a calibration study where we measure $m$ subjects at time $F$ on machines $O$ and $N$. We then build the following regression model:
 
-**Why is the effect of female sex underestimated so severely?**
+$$\widetilde{PWV}_{F,j}^N \sim N(\mu_{F,j}^N = \alpha_0 + \widetilde{PWV}_{F,j}^O\alpha_1, \sigma_F^{N,O})$$
+
+After estimating the parameters of this model, we estimate the following quantity:
+
+$$\widehat{\widetilde{PWV}}_{B,i}^N = \hat{\alpha_0} + PWV_{B,i}^O\hat{\alpha_1}$$
+
+* The exposure of interest for the study is then $\Delta \widehat{\widetilde{PWV}}_i = \widetilde{PWV}_{F,i}^N - \widehat{\widetilde{PWV}}_{B,i}^N$
+* The outcome model is $Y_{F,i} \sim N(\mu_{Y_{F,i}} = \gamma_0 + \Delta \widehat{\widetilde{PWV}}_i\gamma_1 + \mathbf{Z}_i\boldsymbol\gamma, \sigma_{Y_F})$.
+* The estimand of interest is $\gamma_1$.
+
+# Bayesian measurement error model
+
+Now let's assume we did not do a calibration study, but know the measurement error of each device ($\sigma_B^O$ and $\sigma_F^N$). 
+
+* The exposure is $\Delta \widehat{PWV}_i = \widehat{PWV}_{F,i} - \widehat{PWV}_{B,i}$. These unknowns are estimated simultaneously with the outcome model using Hamiltonian Monte Carlo.
+* The outcome model is $Y_{F,i} \sim N(\mu_{Y_{F,i}} = \nu_0 + \Delta\widehat{PWV}_i\nu_1 + \mathbf{Z}_i\boldsymbol\nu, \sigma_{Y_F})$.
+* The estimand of interest is $\nu_1$.
+
+# Hypothesis of simulation study
+
+We are assuming that $\hat{\nu}_1$ is less biased for $\omega_1$ than $\hat{\gamma}_1$ is for $\omega_1$.
+
+We are also technically assuming truncated normal distributions for $PWV$ and its measurements $\widetilde{PWV}$ in the simulation study.
