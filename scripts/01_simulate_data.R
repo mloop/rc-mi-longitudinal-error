@@ -7,12 +7,11 @@ n <- 2500
 # Create true values of PWV
 
 sims <- 
-  expand_grid(iteration = seq(1, 2000, 1),
-         me_reduction = c(0.9, 0.5, 0.25)) %>%  # 10% reduction in me, 50%, and 75%
-  group_by(iteration, me_reduction) %>%
+  expand_grid(iteration = seq(1, 100, 1)) %>%  # 10% reduction in me, 50%, and 75%
+  group_by(iteration) %>%
   nest() %>%
   mutate(
-    df = map2(iteration, me_reduction, ~tibble(
+    df = map(iteration, ~tibble(
       id = seq(1, n, 1),
   pwv_visit1 = truncnorm::rtruncnorm(n, mean = 1100, sd = 350, a = 300, b = 2500),
   female = rbinom(n, size = 1, prob = 0.5),
@@ -23,15 +22,15 @@ sims <-
     ) %>%
     group_by(id) %>%
     mutate(
-      pwv_visit2 = truncnorm::rtruncnorm(1, mean = (1120 + 0.1 * pwv_visit1_c - 5 * female), sd = 50, a = 300, b = 2500), # PWV after 5 years
+      pwv_visit2 = truncnorm::rtruncnorm(1, mean = (1120 + 0.1 * pwv_visit1_c - 5 * female), sd = 300, a = 300, b = 2500), # PWV after 5 years
 
 # Create two different measurements of PWV, with measurement error, where the distribution is different at the different time points, due to different machines.
 
-      pwv_visit1_measured = truncnorm::rtruncnorm(1, mean = pwv_visit1, sd = 112.8, a = 300, b = 2500) %>% as.numeric(),
+      pwv_visit1_measured = truncnorm::rtruncnorm(1, mean = pwv_visit1 + 100, sd = 112.8, a = 300, b = 2500) %>% as.numeric(),
 
-      pwv_visit2_measured = truncnorm::rtruncnorm(1, mean = pwv_visit2, sd = 112.8 * .y, a = 300, b = 2500),
+      pwv_visit2_measured = truncnorm::rtruncnorm(1, mean = pwv_visit2 + 75, sd = 112.8, a = 300, b = 2500),
   
-      pwv_visit2_measured_calibration = truncnorm::rtruncnorm(1, mean = pwv_visit2, sd = 112.8, a = 300, b = 2500),
+      pwv_visit2_measured_calibration = truncnorm::rtruncnorm(1, mean = pwv_visit2 + 100, sd = 112.8, a = 300, b = 2500),
   
       true_diff = pwv_visit2 - pwv_visit1,
       measured_diff = pwv_visit2_measured - pwv_visit1_measured
@@ -44,7 +43,8 @@ sims <-
       pwv_visit1_measured_c = scale(pwv_visit1_measured, scale = FALSE) %>% as.numeric(),
       pwv_visit2_measured_calibration_c = scale(pwv_visit2_measured_calibration, scale = FALSE) %>% as.numeric(),
       true_diff_c = scale(true_diff, scale = FALSE) %>% as.numeric(),
-      measured_diff_c = scale(measured_diff, scale = FALSE) %>% as.numeric()
+      measured_diff_c = scale(measured_diff, scale = FALSE) %>% as.numeric(),
+      sampled_for_calibration = rbinom(n, size = 1, prob = 50 / n)
     ) %>%
   group_by(id) %>%
   mutate(
