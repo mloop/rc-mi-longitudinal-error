@@ -2,6 +2,7 @@ library(tidyverse)
 library(rstan)
 library(tidybayes)
 library(broom)
+library(broom.mixed)
  
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
@@ -31,7 +32,7 @@ fit_obs %>% write_rds(file = "../output/02_simple_lm_observed.rds")
 fit_calib <- sims %>%
   mutate(
     df  = map(df, ~ungroup(.x)),
-    calib_fit = map(df, ~slice_sample(.x, n = 50) %>% lm(pwv_visit2_measured ~ pwv_visit2_measured_calibration, data = .)),  # Perform calibration study
+    calib_fit = map(df, ~lm(pwv_visit2_measured ~ pwv_visit2_measured_calibration, data = filter(., sampled_for_calibration == 1))),  # Perform calibration study
     df_calib = map2(df, calib_fit, ~modelr::add_predictions(select(.x, pwv_visit1_measured) %>%  # Get predicted new device measurements on old visit 1 measures
                                                               rename(pwv_visit2_measured_calibration = pwv_visit1_measured), model = .y) %>%
                       rename(pwv_visit1_measured = pwv_visit2_measured_calibration) %>%
@@ -53,21 +54,29 @@ me_mod <- stan_model(file = "02_model.stan")
 
 library(furrr)
 
-plan(multicore, workers = 40)
+plan(multicore, workers = 8)
 
 fit_bayes <- sims %>%
   mutate(
-    data_stan = future_map2(df, me_reduction, ~tidybayes::compose_data(.x) %>% list_modify(me_reduction = .y)),
-    fits = future_map(data_stan, ~sampling(me_mod, data = ., iter = 2000, chains = 4,
-                                    pars = c("mu_pwv_1", 
-                                             "sigma_pwv_1", 
-                                             "mu_pwv_2",
-                                             "sigma_pwv_2",
+    data_stan = future_map(df, ~tidybayes::compose_data(.)),
+    
+    data_stan_calibration = future_map2(df, data_stan, ~list_modify(.y, calibration_indices = (.x$sampled_for_calibration == 1) %>% which())),
+    
+    data_stan_final = future_map(data_stan_calibration, ~list_modify(.x, j = length(.x$calibration_indices))),
+
+
+    fits = future_map(data_stan_final, ~sampling(me_mod, data = ., iter = 2000, chains = 4,
+                                    pars = c("mu_x_b", 
+                                             "sigma_x_b", 
+                                             "mu_x_f",
+                                             "sigma_x_f",
                                              "beta_0", 
                                              "beta_female", 
                                              "beta_age_c", 
                                              "beta_diff_c",
-                                             "sigma"), 
+                                             "sigma",
+                                             "mu_u_b",
+                                             "mu_u_f"), 
                                     include = TRUE),
           seed = TRUE)
   )

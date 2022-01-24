@@ -24,9 +24,11 @@ Assume that we have collected pulse wave velocity (PWV) on a set of 2,500 partic
   * $W_B^O$: error-prone PWV measured at baseline on old instrument (observed for everyone)
     * Assume $U_B^O \sim N(\mu_{U_B^O}, \sigma_{U_B^O})$.
   * $W_B^N$ : error-prone PWV measured at baseline on new instrument (not observed for anyone)
-  * $W_FNO$: error-prone PWV measured at follow-up on old instrument (observed for subsample)
+  * $W_F^O$: error-prone PWV measured at follow-up on old instrument (observed for subsample)
   * $W_F^N$ : error-prone PWV measured at follow-up on new instrument (observed for everyone)
     * Assume $U_F^N \sim N(\mu_{U_F^N}, \sigma_{U_F^N})$.
+  * Assume that $\mu_{U_B^O} = \mu_{U_F^O}=\mu_{U^O}$. Likewise, assume $\sigma_{U_B^O} = \sigma_{U_F^O}=\sigma_{U^O}$.
+  * Assume that $\mu_{U_B^N} = \mu_{U_F^N}=\mu_{U^N}$. Likewise, assume $\sigma_{U_B^N} = \sigma_{U_F^N}=\sigma_{U^N}$.
 * Let $Y$ denote the outcome, a measure of brain health taken at follow-up. 
 * Let $Z$ denote a vector of additional (fully observed) covariates.
 
@@ -62,6 +64,7 @@ $$\hat{W}_{B,i}^N = \hat{\gamma_0} + W_{B,i}^O\hat{\gamma_1}$$
 
 * The unobserved, primary exposure of interest $\Delta_X$ is estimated by $\Delta_{W_{C,i}} = W_{F,i}^N - \widehat{W}_{B,i}^N$, where $W_{C,i}$ is the calibrated difference in the error-prone measurements of PWV.
 * The model of primary clinical interest is estimated by substituting $\Delta_{W_{C,i}}$ for $\Delta_X$.
+* This method rests on the hope that $E[\widehat{W}_{B,i}^N] = X_B + \mu_{U^N}$, or an unbiased estimator of what the measurement with the new device would have been at baseline. If that is the case, then $E[\Delta_{W_C} | \Delta_X] = (X_F + \mu_{U^N}) - (X_B + \mu_{U^N}) = X_F - X_B$. In other words, that assumption would make $\Delta_{W_C}$ an unbiased estimator of $\Delta_X$.
 * It's not totally clear to me what the hope of this calibration method is. It seems the hope is that $E[\Delta_X] = E[\Delta_W]$, but
   1. this goal is a pretty low bar (much like BLUP);
   2. it's only true if $\hat{\gamma}_1=1$, which occurs only when $W_F^N$ and $W_B^O$ are perfectly correlated. (see [*here*](https://workflowy.com/s/change-model-notatio/IOv8rCrL59EDFImT) for handwritten notes)
