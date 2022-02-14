@@ -4,56 +4,70 @@ set.seed(74838)
 
 n <- 2500
 
-# Create true values of PWV
+# Create simulation conditions
 
-sims <- 
-  expand_grid(iteration = seq(1, 1, 1)) %>%  # 10% reduction in me, 50%, and 75%
-  group_by(iteration) %>%
-  nest() %>%
-  mutate(
-    df = map(iteration, ~tibble(
-      id = seq(1, n, 1),
-  x_b = truncnorm::rtruncnorm(n, mean = 1100, sd = 350, a = 300, b = 2500),
-  female = rbinom(n, size = 1, prob = 0.5),
-  age = rnorm(n, mean = 55, sd = 10) %>% round(., digits = 0),
-  age_trunc = if_else(age < 20, 20, if_else(age >= 95, 95, age)),
-  age_centered = scale(age_trunc, scale = FALSE) %>% round(., digits = 1) %>% as.vector(),
-  x_b_c = scale(x_b, scale = FALSE) %>% as.numeric()
-    ) %>%
+conditions <- expand_grid(mu_u_o = c(10, 15), 
+                          mu_u_n = c(10, 15), 
+                          sd_u_o = c(112.8, 50), 
+                          sd_u_n = c(112.8, 50)) %>%
+  slice(-4, -8, -12, -16) %>%
+  slice(-10, -11, -12)
+
+conditions
+
+# Write function for data generation
+
+genesis <- function(mu_u_o, mu_u_n, sd_u_o, sd_u_n, ...){
+  x <- tibble(
+    id = seq(1, n, 1),
+    x_b = truncnorm::rtruncnorm(n, mean = 1100, sd = 350, a = 300, b = 2500),
+    female = rbinom(n, size = 1, prob = 0.5),
+    age = rnorm(n, mean = 55, sd = 10) %>% round(., digits = 0),
+    age_trunc = if_else(age < 20, 20, if_else(age >= 95, 95, age)),
+    age_centered = scale(age_trunc, scale = FALSE) %>% round(., digits = 1) %>% as.vector(),
+    x_b_c = scale(x_b, scale = FALSE) %>% as.numeric()
+  ) %>%
     group_by(id) %>%
     mutate(
       x_f = truncnorm::rtruncnorm(1, mean = (1120 + 0.1 * x_b_c - 5 * female), sd = 300, a = 300, b = 2500), # PWV after 5 years
-
-# Create two different measurements of PWV, with measurement error, where the distribution is different at the different time points, due to different machines.
-
-      w_b_o = truncnorm::rtruncnorm(1, mean = x_b + 100, sd = 112.8, a = 300, b = 2500) %>% as.numeric(),
-
-      w_f_n = truncnorm::rtruncnorm(1, mean = x_f + 75, sd = 112.8, a = 300, b = 2500),
-  
-      w_f_o = truncnorm::rtruncnorm(1, mean = x_f + 100, sd = 112.8, a = 300, b = 2500),
-  
-      true_diff = x_f - x_b,
-      measured_diff = w_f_n - w_b_o
       
+      # Create two different measurements of PWV, with measurement error, where the distribution is different at the different time points, due to different machines.
       
+      w_b_o = truncnorm::rtruncnorm(1, mean = x_b + mu_u_o, sd = sd_u_o, a = 300, b = 2500) %>% as.numeric(),
       
-                ) %>% 
+      w_f_n = truncnorm::rtruncnorm(1, mean = x_f + mu_u_n, sd = sd_u_n, a = 300, b = 2500),
+      
+      w_f_o = truncnorm::rtruncnorm(1, mean = x_f + mu_u_o, sd = sd_u_o, a = 300, b = 2500),
+      
+      x_diff = x_f - x_b,
+      w_diff = w_f_n - w_b_o
+    ) %>% 
     ungroup() %>%
     mutate(
-      w_b_o_c = scale(w_b_o, scale = FALSE) %>% as.numeric(),
-      w_f_n_c = scale(w_f_n, scale = FALSE) %>% as.numeric(),
-      true_diff_c = scale(true_diff, scale = FALSE) %>% as.numeric(),
-      measured_diff_c = scale(measured_diff, scale = FALSE) %>% as.numeric(),
+      x_diff_c = scale(x_diff, scale = FALSE) %>% as.numeric(),
+      w_diff_c = scale(w_diff, scale = FALSE) %>% as.numeric(),
       sampled_for_calibration = rbinom(n, size = 1, prob = 50 / n)
     ) %>%
-  group_by(id) %>%
+    group_by(id) %>%
+    mutate(
+      brain_volume = rnorm(1, mean = 1000 + -0.2 * x_diff_c + -125.217 * female + -4.267 * age_centered, sd = 107)  # Might want to truncate this. Random variation is so small compared to location that it may not be a big deal.
+    ) %>%
+    ungroup()
+  
+  return(x)
+}
+
+# Create simulated data
+
+sims <- 
+  expand_grid(iteration = seq(1, 10, 1),
+              conditions) %>%
+  group_by(iteration, mu_u_o, mu_u_n, sd_u_o, sd_u_n) %>%
+  nest() %>%
   mutate(
-    brain_volume = rnorm(1, mean = 1000 + -0.2 * true_diff_c + -125.217 * female + -4.267 * age_centered, sd = 107)  # Might want to truncate this. Random variation is so small compared to location that it may not be a big deal.
+    df = pmap(list(mu_u_o, mu_u_n, sd_u_o, sd_u_n), ~genesis(mu_u_o, mu_u_n, sd_u_o, sd_u_n) %>%
+                select(id, x_b, x_f, x_diff, x_diff_c, w_b_o, w_f_n, w_f_o, age_centered, female, brain_volume))
   )
-            )
-) %>%
-  select(-data) %>%
-  ungroup()
 
 dir.create("../data/", showWarnings = FALSE)
 write_rds(sims, file = "../data/01_simulated_data.rds")

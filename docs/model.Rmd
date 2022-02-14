@@ -81,6 +81,8 @@ $$
 $$
 $$W_{B,i}^O \sim N(X_{B,i} + \mu_{U_B^O},112.8)$$
 $$W_{F,i}^N \sim N(X_{F,i} + \mu_{U_F^N},112.8)$$
+
+
 * I don't think $\mu_{U_B^O}$ and $\mu_{U_F^N}$ are identifiable without a calibration study at the second visit.
 
 $$X_{B,i} \sim \textrm{truncated Normal}(\mu_{X_B}, \sigma_{X_B}, a = 300, b = 2500)$$
