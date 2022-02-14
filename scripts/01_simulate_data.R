@@ -66,7 +66,7 @@ sims <-
   nest() %>%
   mutate(
     df = pmap(list(mu_u_o, mu_u_n, sd_u_o, sd_u_n), ~genesis(mu_u_o, mu_u_n, sd_u_o, sd_u_n) %>%
-                select(id, x_b, x_f, x_diff, x_diff_c, w_b_o, w_f_n, w_f_o, age_centered, female, brain_volume))
+                select(id, x_b, x_f, x_diff, x_diff_c, w_b_o, w_f_n, w_f_o, sampled_for_calibration, age_centered, female, brain_volume))
   )
 
 dir.create("../data/", showWarnings = FALSE)
