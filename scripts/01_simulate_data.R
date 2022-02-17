@@ -60,7 +60,7 @@ genesis <- function(mu_u_o, mu_u_n, sd_u_o, sd_u_n, ...){
 # Create simulated data
 
 sims <- 
-  expand_grid(iteration = seq(1, 10, 1),
+  expand_grid(iteration = seq(1, 1000, 1),
               conditions) %>%
   group_by(iteration, mu_u_o, mu_u_n, sd_u_o, sd_u_n) %>%
   nest() %>%
