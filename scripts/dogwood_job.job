@@ -7,5 +7,4 @@
 
 module load r/4.0.3
 module load gcc/6.3.0
-Rscript 01_simulate_data.R
-Rscript 02_model.R
+make
