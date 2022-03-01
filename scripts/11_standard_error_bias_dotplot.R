@@ -2,19 +2,13 @@ library(tidyverse)
 
 results <- read_rds("../output/08_results.rds")
 
-bias_summary <- results %>%
+se_summary <- results %>%
   group_by(mu_u_o, mu_u_n, sd_u_o, sd_u_n, term, method) %>%
-  mutate(
-    true_value = case_when(
-      term == "(Intercept)" ~ 1000,
-      term == "age_centered" ~ -4.267,
-      term == "female" ~ -125.217,
-      term == "w_diff_c" ~ -0.2
-    )
-  ) %>%
   summarise(
-    bias = mean(estimate - true_value),
-    percent_bias = bias / true_value * 100
+    empirical_standard_error = sd(estimate),
+    avg_se = mean(std.error),
+    se_diff = avg_se - empirical_standard_error,
+    se_diff_percent = se_diff / empirical_standard_error * 100
   ) %>%
   ungroup() %>%
   mutate(
@@ -30,10 +24,11 @@ bias_summary <- results %>%
     ) %>% factor() %>% fct_relevel("new 50 cm/s, old 113 cm/s", "equal (113 cm/s)")
   )
 
-p <- bias_summary %>%
+p <- se_summary %>%
   filter(term == "w_diff_c") %>%
-  ggplot(aes(x = percent_bias, y = method)) +
+  ggplot(aes(x = se_diff_percent, y = method)) +
   geom_point() +
-  facet_grid(device_bias ~ measurement_error)
+  facet_grid(device_bias ~ measurement_error) +
+  ggsci::scale_color_aaas()
 
-ggsave("../figs/09_percent_bias_dotplot.pdf", p, width = 12, height = 6, units = "in")
+ggsave("../figs/11_percent_re_dotplot.pdf", p, width = 12, height = 6, units = "in")

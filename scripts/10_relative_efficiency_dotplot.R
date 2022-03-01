@@ -2,20 +2,12 @@ library(tidyverse)
 
 results <- read_rds("../output/08_results.rds")
 
-bias_summary <- results %>%
+re_summary <- results %>%
   group_by(mu_u_o, mu_u_n, sd_u_o, sd_u_n, term, method) %>%
-  mutate(
-    true_value = case_when(
-      term == "(Intercept)" ~ 1000,
-      term == "age_centered" ~ -4.267,
-      term == "female" ~ -125.217,
-      term == "w_diff_c" ~ -0.2
-    )
-  ) %>%
   summarise(
-    bias = mean(estimate - true_value),
-    percent_bias = bias / true_value * 100
+    empirical_standard_error = sd(estimate)
   ) %>%
+  mutate(relative_efficiency = if_else(method == "true", 1, (1 / empirical_standard_error ^ 2) / (1 / last(empirical_standard_error) ^ 2))) %>%
   ungroup() %>%
   mutate(
     device_bias = case_when(
@@ -30,10 +22,10 @@ bias_summary <- results %>%
     ) %>% factor() %>% fct_relevel("new 50 cm/s, old 113 cm/s", "equal (113 cm/s)")
   )
 
-p <- bias_summary %>%
+p <- re_summary %>%
   filter(term == "w_diff_c") %>%
-  ggplot(aes(x = percent_bias, y = method)) +
+  ggplot(aes(x = relative_efficiency, y = method)) +
   geom_point() +
   facet_grid(device_bias ~ measurement_error)
 
-ggsave("../figs/09_percent_bias_dotplot.pdf", p, width = 12, height = 6, units = "in")
+ggsave("../figs/10_relative_efficiency_dotplot.pdf", p, width = 12, height = 6, units = "in")
