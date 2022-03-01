@@ -1,7 +1,7 @@
-all: ../data/01_simulated_data.rds ../output/02_naive.rds ../output/03_complete_case.rds ../output/04_snipe.rds ../output/05_multiple_imputation.rds ../output/07_true_model.rds ../output/08_results.rds ../figs/09_bias_heat_map.pdf
+all: ../data/01_simulated_data.rds ../output/02_naive.rds ../output/03_complete_case.rds ../output/04_snipe.rds ../output/05_multiple_imputation.rds ../output/07_true_model.rds ../output/08_results.rds ../figs/09_percent_bias_dotplot.pdf
 
-../figs/09_bias_heat_map.pdf: 09_bias_heat_map.R ../output/08_results.rds
-	Rscript 09_bias_heat_map.R
+../figs/09_percent_bias_dotplot.pdf: 09_percent_bias_dotplot.R ../output/08_results.rds
+	Rscript 09_percent_bias_dotplot.R
 
 ../output/08_results.rds: 08_compile_results.R ../output/07_true_model.rds ../output/05_multiple_imputation.rds ../output/04_snipe.rds ../output/03_complete_case.rds ../output/02_naive.rds
 	Rscript 08_compile_results.R
