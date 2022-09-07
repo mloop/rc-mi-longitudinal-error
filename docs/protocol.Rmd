@@ -5,12 +5,70 @@ date: "Last modified: `r Sys.Date()`"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = F)
+```
+
+# The question
+
+Among observational studies using change in pulse wave velocity (PWV) from baseline to follow up as the main exposure, measured with two different error-prone devices at the two different time points, which statistical methods are best to use to estimate the association between change in PWV and a health outcome?
+
+## Statistical methods being compared
+
+1. Naive
+2. Complete case
+3. Regression calibration^[We previously called this single naive imputation of predicted exposure (SNIPE). After looking through the Word comments on the manuscript from Tanya and Sarah, I think we really are doing regression calibration. I just presented the problem in a way that made it difficult to see this fact.]
+4. Multiple imputation
+5. Fully Bayesian imputation
+
+## Definitions of 'best'
+
+1. Bias of association between change in PWV and health outcome
+2. Bias of standard error of estimated association between change in PWV and health outcome
+3. Relative efficiency of estimated association between change in PWV and health outcome
+
+# Notation
+
+# Description of statistical methods being compared
+
+# Description of how performance will be compared definition of 'best')
+
+# Simulation conditions
+
+All iterations of the simulation will assume:
+
+1. a sample size of 2,500 participants
+2. truncated normal distributions for PWV, with the bounds between 300 and 2500 cm/s
+3. $X_F \sim truncN(1120 + 0.1 X_{B,centered} - 5 *female, \sigma = 300, a = 300, b = 2500)$
+4. 50 of the participants are randomly sampled for the calibration study at follow up
+5. the overall health question of interest is the relationship between brain volume at follow up and change in PWV between baseline and follow up, with an assumed regression equation of $\textrm{Brain volume} \sim N(1000 - 0.2*\Delta X_{centered} - 125.217 * female - 4.267* age_{centered}, \sigma = 107)$
+6. $X_B \sim truncN(\mu = 1100, \sigma = 350, a = 300, b = 2500)$
+
+## Conditions that will vary
+
+1. whether the baseline ($U^O$) or follow up ($U^N$) measurement error term is more biased, or whether they have equal bias for $X_B$ and $X_F$ (i.e., $\mu_{U^O} > \mu_{U^N}, \mu_{U^O} < \mu_{U^N}$, or $\mu_{U^O} = \mu_{U^N}$)
+2. whether the baseline ($U^O$) or follow up ($U^N$) measurement error term error is larger, or whether they have equal error for $X_B$ and $X_F$ (i.e., $\sigma_{U^O} > \sigma_{U^N}, \sigma_{U^O} < \sigma_{U^N}$, or $\sigma_{U^O} = \sigma_{U^N}$)
+
+```{r, echo  =F}
+library(tidyverse)
+
+set.seed(74838)
+
+n <- 2500
+
+# Create simulation conditions
+
+conditions <- expand_grid(mu_u_o = c(10, 15), 
+                          mu_u_n = c(10, 15), 
+                          sd_u_o = c(112.8, 50), 
+                          sd_u_n = c(112.8, 50)) %>%
+  slice(-4, -8, -12, -16) %>%
+  slice(-10, -11, -12)
+conditions %>% knitr::kable()
 ```
 
 
-
+# History of revisions
 ```{bash}
-git log --pretty --oneline protocol.Rmd
+git log --pretty protocol.Rmd
 ```
 
