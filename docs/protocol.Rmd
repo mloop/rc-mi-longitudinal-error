@@ -1,0 +1,16 @@
+---
+title: "Protocol"
+output: word_document
+date: "Last modified: `r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{bash}
+git log --pretty --oneline protocol.Rmd
+```
+
