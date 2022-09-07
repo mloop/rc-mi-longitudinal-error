@@ -1,4 +1,10 @@
-all: ../data/01_simulated_data.rds ../output/02_naive.rds ../output/03_complete_case.rds ../output/04_snipe.rds ../output/05_multiple_imputation.rds ../output/07_true_model.rds ../output/08_results.rds ../figs/09_percent_bias_dotplot.pdf
+all: ../data/01_simulated_data.rds ../output/02_naive.rds ../output/03_complete_case.rds ../output/04_snipe.rds ../output/05_multiple_imputation.rds ../output/07_true_model.rds ../output/08_results.rds ../figs/09_percent_bias_dotplot.pdf ../figs/10_relative_efficiency_dotplot.pdf ../figs/11_standard_error_bias_dotplot.pdf
+
+../figs/11_standard_error_bias_dotplot.pdf: 11_standard_error_bias_dotplot.R ../output/08_results.rds
+	Rscript 11_standard_error_bias_dotplot.R
+
+../figs/10_relative_efficiency_dotplot.pdf: 10_relative_efficiency_dotplot.R ../output/08_results.rds
+	Rscript 10_relative_efficiency_dotplot.R
 
 ../figs/09_percent_bias_dotplot.pdf: 09_percent_bias_dotplot.R ../output/08_results.rds
 	Rscript 09_percent_bias_dotplot.R
