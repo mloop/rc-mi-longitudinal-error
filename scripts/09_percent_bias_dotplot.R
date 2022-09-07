@@ -1,7 +1,7 @@
 library(tidyverse)
 
 results <- read_rds("../output/08_results.rds")
-
+dir.create("../figs/", showWarnings = FALSE)
 bias_summary <- results %>%
   group_by(mu_u_o, mu_u_n, sd_u_o, sd_u_n, term, method) %>%
   mutate(
