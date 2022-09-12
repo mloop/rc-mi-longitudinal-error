@@ -1,9 +1,10 @@
 #!/bin/bash
 
+#SBATCH --job-name=pwv_me_sim
 #SBATCH -p 528_queue
 #SBATCH -N 4
 #SBATCH --ntasks-per-node=40
-#SBATCH -t 4-
+#SBATCH --time=2-23:00:00
 
 module load r/4.0.3
 module load gcc/6.3.0
