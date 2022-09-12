@@ -27,8 +27,71 @@ Among observational studies using change in pulse wave velocity (PWV) from basel
 3. Relative efficiency of estimated association between change in PWV and health outcome
 
 # Notation
+* Throughout, we refer to pulse wave velocity as PWV
+* Let $X_B$ and $X_F$ denote the true PWV measurements at baseline and follow-up, respectively. These are unobserved.
+  * The exposure of primary interest for the study is $\Delta_X = X_F - X_B$. This is also unobserved.
+* Due to instrument error, *error-prone* PWV measurements $W_B$ and $W_F$ are actually observed. These measurements are error-prone measurements of $X_B$ and $X_F$, respectively. That is, we observe $W_B = X_B + U_B$ and $W_F = X_F + U_F$, were $U_B$ and $U_F$ denote error induced by the measurement.
+  * Based on the error-prone measurements of PWV, we have the naive measure of change in PWV $\Delta_W = W_F - W_B$.
+* Introduce superscripts $O$ or $N$ to the error-prone PWV measurements to indicate that they were measured on the old or new instruments, respectively, i.e.,
+  * $W_B^O$: error-prone PWV measured at baseline on old instrument (observed for everyone)
+    * Assume $U_B^O \sim N(\mu_{U_B^O}, \sigma_{U_B^O})$.
+  * $W_B^N$ : error-prone PWV measured at baseline on new instrument (not observed for anyone)
+  * $W_F^O$: error-prone PWV measured at follow-up on old instrument (observed for subsample of participants who will take place in a "calibration study")
+  * $W_F^N$ : error-prone PWV measured at follow-up on new instrument (observed for everyone)
+    * Assume $U_F^N \sim N(\mu_{U_F^N}, \sigma_{U_F^N})$.
+  * Assume that $\mu_{U_B^O} = \mu_{U_F^O}=\mu_{U^O}$. Likewise, assume $\sigma_{U_B^O} = \sigma_{U_F^O}=\sigma_{U^O}$.
+  * Assume that $\mu_{U_B^N} = \mu_{U_F^N}=\mu_{U^N}$. Likewise, assume $\sigma_{U_B^N} = \sigma_{U_F^N}=\sigma_{U^N}$.
+* Let $Y$ denote the outcome, a measure of brain volume taken at follow-up. 
+* Let $Z$ denote a vector of additional (fully observed) covariates.
 
 # Description of statistical methods being compared
+
+### Naive
+This approach will assume that $W=X$ and that no special analysis needs to be done.
+
+Your analysis set is $i = 1,\dots,n$, where $n$ is the total number of participants who participated in baseline and follow up.
+
+Exposure: $\Delta W_{i,centered} = \Delta W_i - \overline{\Delta W_i}$, where $\Delta W_i = (W_{i,F}^N - W_{i,B}^O)$
+
+Outcome regression model of interest: $E[Y_i] = \beta_0 + \Delta W_{i,centered}\beta_1 + female_i\beta_2 + age_{i,centered}\beta_3$
+
+### Complete case
+This approach will use only participants who participated in the calibration study at follow up (approximately 50). The change in PWV will be calculated by subtracting the measurement on the old device at followup from the measurement on the old device at baseline for this small subset of participants. 
+
+Your analysis set is $j = 1, \dots,m$, where $m$ is the number of participants who participated in the calibration study at followup. These participants would then have both a $W_B^O$ and a $W_F^O$.
+
+Exposure: $\Delta W_{j,centered} = \Delta W_j - \overline{\Delta W_j}$, where $\Delta W_j = (W_{j,F}^O - W_{j,B}^O)$
+
+Outcome regression model of interest: $E[Y_j] = \beta_0 + \Delta W_{j,centered}\beta_1 + female_j\beta_2 + age_{j,centered}\beta_3$
+
+### Regression calibration
+This approach will use the calibration study at follow up to attempt to calibrate measurements on the old device to the new device. Then, the exposure will be calculated by taking the measurement on the new device at follow up minus the calibrated measurement on the old device at baseline.
+
+Your analysis set initially is $j = 1, \dots,m$, where $m$ is the number of participants who participated in the calibration study at followup. These subjects would have both $W_F^O$ and $W_F^N$.
+
+We then build the following regression model:
+
+$$E[W_{F,j}^N] = \gamma_0 + W_{F,j}^O\gamma_1$$
+
+After fitting this model, we estimate $\hat{E[W_{i,B}^N]}$ for $i = 1,\dots,n$.^[This moment is where the approach we detail here departs from the classic regression calibration approach in measurement error studies. In classic studies, all subjects have $W$ and some subjects have $X$. The regression equation is then $E[X_j] = \gamma_0 + W_j\gamma_1$. Then, $\hat{E[X_j]}$ is used as the exposure for all participants in the health outcome regression that you are actually trying to study. In our study, instead of calibrating the error-prone measurement to the true measurement, we are calibrating one error-prone measurement to a different error-prone measurement.] In other words, we use the regression calibration model above to predict what the measurements on the new device would have looked like for the participants at baseline, who all got measurements only with the old device. The analysis set is now $i = 1,\dots,n$, where $n$ is the total number of participants who participated in baseline and follow up.
+
+$$\hat{W}_{B,i}^N = \hat{\gamma_0} + W_{B,i}^O\hat{\gamma_1}$$
+
+$\Delta W_{j,centered} = \Delta W_j - \overline{\Delta W_j}$, where $\Delta W_j = (W_{j,F}^O - W_{j,B}^O)$
+
+Exposure: $\Delta W_{i,centered} = \Delta W_i - \overline{\Delta W_i}$, where $\Delta W_i = (W_{i,F}^N - \hat{E[W_{i,B}^N]})$
+
+Outcome regression model of interest: $E[Y_i] = \beta_0 + \Delta W_{i,centered}\beta_1 + female_i\beta_2 + age_{i,centered}\beta_3$
+
+### Multiple imputation
+With this approach, the $W_F^O$ among $k$ participants at follow up who did not participate in the calibration study ($n-m = k$) is unobserved. These unobserved values are treated as missing data. Multiple imputation is used to impute these missing values, the exposure is defined as the observed/imputed $W_F^O$ minus the observed $W_B^O$. This approach has good potential because all participants have a measurement on the new machine, which should be a great imputation variable for the measurement on the old machine. The imputations are done using $W_B^O$, $W_F^N$, $W_F^O$, $Y$, and $Z$.
+
+The analysis set is $i = 1,\dots,n$, where $n$ is the total number of participants who participated in baseline and follow up.
+
+We create 100 imputed datasets, where we are imputing $W_F^O$ because it is missing for most participants. We fit the outcome regression model of interest in each of the 100 datasets and combine the results according to Rubin's Rules.
+
+Exposure: $\Delta W_{i,centered} = \Delta W_i - \overline{\Delta W_i}$, where $\Delta W_i = (W_{i,F}^O - W_{i,B}^O)$
+Outcome regression model of interest: $E[Y_i] = \beta_0 + \Delta W_{i,centered}\beta_1 + female_i\beta_2 + age_{i,centered}\beta_3$
 
 # Description of how performance will be compared definition of 'best')
 

@@ -1,2 +1,9 @@
 data/
 output/
+*.DS_Store
+*.pdf
+*.xlsx
+*.xls
+*.sas7bdat
+*.rds
+*.docx
