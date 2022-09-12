@@ -1,0 +1,11 @@
+#!/bin/bash
+
+#SBATCH -p general
+#SBATCH -N 4
+#SBATCH --ntasks-per-node=40
+#SBATCH -t 2-
+
+module load R/4.2.1
+module load gcc/8.4.0
+make
+
