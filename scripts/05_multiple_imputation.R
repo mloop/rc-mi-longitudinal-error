@@ -6,7 +6,7 @@ library(furrr)
 sims <- read_rds("../data/01_simulated_data.rds")
 
 set.seed(987234)
-plan(multicore, workers = 48)
+plan(multisession, workers = 44)
 
 fit <- sims %>%
   mutate(
