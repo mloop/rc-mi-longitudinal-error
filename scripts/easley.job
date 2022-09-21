@@ -4,7 +4,7 @@
 #SBATCH -p general
 #SBATCH -N 1
 #SBATCH --ntasks-per-node=48
-#SBATCH -t 01:00:00
+#SBATCH -t 03:00:00
 #SBATCH --mail-type=END
 
 module load R/4.2.1
