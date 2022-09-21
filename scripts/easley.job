@@ -1,9 +1,11 @@
 #!/bin/bash
 
+#SBATCH --job-name=measurement-error-sim
 #SBATCH -p general
-#SBATCH -N 4
-#SBATCH --ntasks-per-node=40
-#SBATCH -t 2-
+#SBATCH -N 1
+#SBATCH --ntasks-per-node=5
+#SBATCH -t 01:00:00
+#SBATCH --mail-type=END
 
 module load R/4.2.1
 module load gcc/8.4.0

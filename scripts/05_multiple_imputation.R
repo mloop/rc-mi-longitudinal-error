@@ -6,7 +6,7 @@ library(furrr)
 sims <- read_rds("../data/01_simulated_data.rds")
 
 set.seed(987234)
-plan(multicore, workers = 40)
+plan(multicore, workers = 5)
 
 fit <- sims %>%
   mutate(
@@ -19,16 +19,16 @@ fit <- sims %>%
                 as_tibble()
               ),
     
-    modified_imp = future_map(imp, ~mutate(., w_diff = w_f_o - w_b_o) %>%
+    modified_imp = map(imp, ~mutate(., w_diff = w_f_o - w_b_o) %>%
                          group_by(.imp) %>%
                          mutate(
                            w_diff_c = scale(w_diff, scale = FALSE) %>% as.numeric()
                            )
                          ),
     
-    new_mids = future_map(modified_imp, ~as.mids(.)),
+    new_mids = map(modified_imp, ~as.mids(.)),
     
-    fits = future_map(new_mids, ~with(., lm(brain_volume ~ w_diff_c + female + age_centered)) %>%
+    fits = map(new_mids, ~with(., lm(brain_volume ~ w_diff_c + female + age_centered)) %>%
                  pool() %>%
                  tidy())
   ) %>%
