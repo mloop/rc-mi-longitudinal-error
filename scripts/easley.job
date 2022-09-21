@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH -mem=15G
+#SBATCH --mem=15G
 #SBATCH --job-name=measurement-error-sim
 #SBATCH -p general
 #SBATCH -N 1
