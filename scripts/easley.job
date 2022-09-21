@@ -3,7 +3,7 @@
 #SBATCH --job-name=measurement-error-sim
 #SBATCH -p general
 #SBATCH -N 1
-#SBATCH --ntasks-per-node=5
+#SBATCH --ntasks-per-node=48
 #SBATCH -t 01:00:00
 #SBATCH --mail-type=END
 
