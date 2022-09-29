@@ -3,17 +3,18 @@ library(broom)
 library(mice)
 library(furrr)
 
-sims <- read_rds("../data/01_simulated_data.rds")
+sims <- read_rds("../data/01_simulated_data.rds") %>%
+  select(-data)
+
 
 set.seed(987234)
-plan(multicore, workers = 48)
-
-fit <- sims %>%
+tictoc::tic()
+fit_imp <- sims %>%
   mutate(
-    imp = future_map(df, ~mutate(., w_f_o = if_else(sampled_for_calibration == 1, w_f_o, NA_real_),
+    imp = map(df, ~mutate(., w_f_o = if_else(sampled_for_calibration == 1, w_f_o, NA_real_),
                           w_diff = NA) %>%
                 select(w_b_o, w_f_n, w_f_o, age_centered, female, brain_volume) %>%
-                mice(m = 100, 
+                mice(m = 10, 
                      printFlag = FALSE) %>%
                 mice::complete(action = "long", include = TRUE) %>% 
                 as_tibble()
@@ -26,13 +27,21 @@ fit <- sims %>%
                            )
                          ),
     
-    new_mids = map(modified_imp, ~as.mids(.)),
-    
-    fits = map(new_mids, ~with(., lm(brain_volume ~ w_diff_c + female + age_centered)) %>%
-                 pool() %>%
-                 tidy())
+    new_mids = map(modified_imp, ~as.mids(.))
   ) %>%
-  select(-data, -df, -imp, -modified_imp, -new_mids) %>%
-  unnest(fits)
+  select(-imp, -modified_imp, -df)
+tictoc::toc()
 
+plan(multisession, workers = 3)
+
+fit <- fit_imp %>%
+  mutate(
+    fits = future_map(new_mids, ~with(., lm(brain_volume ~ w_diff_c + 
+female + age_centered)) %>%
+                 pool() %>%
+                 tidy()
+)
+) %>%
+  unnest(fits)
+tictoc::toc()
 fit %>% write_rds(., file = "../output/05_multiple_imputation.rds")
