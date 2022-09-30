@@ -5,10 +5,10 @@ library(furrr)
 
 set.seed(987234)
 
-plan(cluster, workers = 10)
+plan(cluster, workers = 88)
 
 
-for(i in 1:12){
+for(i in 1:1000){
   sims %<-% read_rds(paste0("../output/05_01_", i, ".rds", sep = ""))
   
   fit_imp <- sims %>%
