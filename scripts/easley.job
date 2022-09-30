@@ -1,14 +1,27 @@
 #!/bin/bash
 
 #SBATCH --mem=15G
-#SBATCH --job-name=measurement-error-sim
+#SBATCH --job-name=me-sim
 #SBATCH -p general
-#SBATCH -N 1
+#SBATCH -N 2
 #SBATCH --ntasks-per-node=44
-#SBATCH -t 08:00:00
-#SBATCH --mail-type=END
+#SBATCH -t 02:00:00
+#SBATCH --mail-type=END,FAIL
 
 module load R/4.2.1
 module load gcc/8.4.0
-make
+
+Rscript 01_simulate_data.R
+Rscript 02_naive.R
+Rscript 03_complete_case.R
+Rscript 04_snipe.R
+Rscript 05_01_split_datasets.R
+Rscript 05_02_create_imputations.R
+Rscript 05_03_pool_results.R
+#Rscript 06_bayesian_model.R
+Rscript 07_true_model.R
+Rscript 08_compile_results.R
+Rscript 09_percent_bias_dotplot.R
+Rscript 10_relative_efficiency_dotplot.R
+Rscript 11_standard_error_bias_dotplot.R
 
