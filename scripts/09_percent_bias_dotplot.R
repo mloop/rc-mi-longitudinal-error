@@ -19,15 +19,15 @@ bias_summary <- results %>%
   ungroup() %>%
   mutate(
     device_bias = case_when(
-      mu_u_n == mu_u_o ~ "equal (10 cm/s)",
-      mu_u_n > mu_u_o ~ "new 5 cm/s more",
-      mu_u_n < mu_u_o ~ "new 5 cm/s less"
-    ) %>% factor() %>% fct_relevel("new 5 cm/s less", "equal (10 cm/s)"),
+      mu_u_n == mu_u_o ~ "Both devices biased by +10 cm/s",
+      mu_u_n > mu_u_o ~ "New device biased by +15 cm/s, old by +10 cm/s",
+      mu_u_n < mu_u_o ~ "New device biased by +10 cm/s, old by +15 cm/s"
+    ) %>% factor() %>% fct_relevel("New device biased by +10 cm/s, old by +15 cm/ss", "Both devices biased by +10 cm/s"),
     measurement_error = case_when(
-      sd_u_n == sd_u_o ~ "equal (113 cm/s)",
-      sd_u_n > sd_u_o ~ "new 113 cm/s, old 50 cm/s",
-      sd_u_n < sd_u_o ~ "new 50 cm/s, old 113 cm/s"
-    ) %>% factor() %>% fct_relevel("new 50 cm/s, old 113 cm/s", "equal (113 cm/s)")
+      sd_u_n == sd_u_o ~ "Measurement error equal (113 cm/s)",
+      sd_u_n > sd_u_o ~ "New measurement error 113 cm/s, old 50 cm/s",
+      sd_u_n < sd_u_o ~ "New measurement error 50 cm/s, old 113 cm/s"
+    ) %>% factor() %>% fct_relevel("New measurement error 50 cm/s, old 113 cm/s", "Measurement error equal (113 cm/s)")
   )
 
 p <- bias_summary %>%
