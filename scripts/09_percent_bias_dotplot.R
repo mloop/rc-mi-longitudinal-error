@@ -22,7 +22,7 @@ bias_summary <- results %>%
       mu_u_n == mu_u_o ~ "Both devices biased by +10 cm/s",
       mu_u_n > mu_u_o ~ "New device biased by +15 cm/s, old by +10 cm/s",
       mu_u_n < mu_u_o ~ "New device biased by +10 cm/s, old by +15 cm/s"
-    ) %>% factor() %>% fct_relevel("New device biased by +10 cm/s, old by +15 cm/ss", "Both devices biased by +10 cm/s"),
+    ) %>% factor() %>% fct_relevel("New device biased by +10 cm/s, old by +15 cm/s", "Both devices biased by +10 cm/s"),
     measurement_error = case_when(
       sd_u_n == sd_u_o ~ "Measurement error equal (113 cm/s)",
       sd_u_n > sd_u_o ~ "New measurement error 113 cm/s, old 50 cm/s",
@@ -34,6 +34,10 @@ p <- bias_summary %>%
   filter(term == "w_diff_c") %>%
   ggplot(aes(x = percent_bias, y = method)) +
   geom_point() +
-  facet_grid(device_bias ~ measurement_error)
+  labels(x = "Percent bias", y = "Method", title = "Percent bias of each method as measurement error and bias of each device changes") +
+  facet_grid(device_bias ~ measurement_error,
+             labeller = labeller(device_bias = label_wrap_gen(width = 25),
+                                 measurement_error = label_wrap_gen(width = 25))
+            )
 
 ggsave("../figs/09_percent_bias_dotplot.pdf", p, width = 12, height = 6, units = "in")
