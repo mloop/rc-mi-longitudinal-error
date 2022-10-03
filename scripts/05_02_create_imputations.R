@@ -5,7 +5,7 @@ library(furrr)
 
 set.seed(987234)
 
-plan(cluster, workers = 88)
+plan(multicore, workers = 172)
 
 
 for(i in 1:1000){

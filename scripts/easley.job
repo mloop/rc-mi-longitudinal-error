@@ -1,11 +1,11 @@
 #!/bin/bash
 
-#SBATCH --mem=15G
+#SBATCH --mem=3G
 #SBATCH --job-name=me-sim
 #SBATCH -p general
-#SBATCH -N 2
+#SBATCH --nodes=4
 #SBATCH --ntasks-per-node=44
-#SBATCH -t 02:00:00
+#SBATCH -t 08:00:00
 #SBATCH --mail-type=END,FAIL
 
 module load R/4.2.1
