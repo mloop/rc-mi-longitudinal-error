@@ -16,7 +16,7 @@ for(i in 1:1000){
       imp = map(df, ~mutate(., w_f_o = if_else(sampled_for_calibration == 1, w_f_o, NA_real_),
                             w_diff = NA) %>%
                   select(w_b_o, w_f_n, w_f_o, age_centered, female, brain_volume) %>%
-                  mice(m = 10, 
+                  mice(m = 50, 
                        printFlag = FALSE) %>%
                   mice::complete(action = "long", include = TRUE) %>% 
                   as_tibble()
