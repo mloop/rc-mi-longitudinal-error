@@ -7,7 +7,7 @@ re_summary <- results %>%
   summarise(
     empirical_standard_error = sd(estimate)
   ) %>%
-  mutate(relative_efficiency = if_else(method == "true", 1, (1 / empirical_standard_error ^ 2) / (1 / last(empirical_standard_error) ^ 2))) %>%
+  mutate(relative_efficiency = (1 / empirical_standard_error ^ 2) / (1 / last(empirical_standard_error) ^ 2)) %>%
   ungroup() %>%
   mutate(
     device_bias = case_when(
@@ -26,6 +26,7 @@ p <- re_summary %>%
   filter(term == "w_diff_c") %>%
   ggplot(aes(x = relative_efficiency, y = method)) +
   geom_point() +
+  geom_vline(xintercept = 1, linetype = "dashed") +
   facet_grid(device_bias ~ measurement_error)
 
 ggsave("../figs/10_relative_efficiency_dotplot.pdf", p, width = 12, height = 6, units = "in")
