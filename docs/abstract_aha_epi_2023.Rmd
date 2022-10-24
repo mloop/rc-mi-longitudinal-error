@@ -6,32 +6,31 @@ editor_options:
 ---
 
 Character count limit is 2,500 (no spaces).
-Current count: 2,477.
+Current count: 2,463.
 
 **Title** Should regression calibration or multiple imputation be used when calibrating different devices in a longitudinal study?
 
-**Authors** Matthew Shane Loop, Sarah C. Lotspeich, Matthew A. Psioda, Tanya P. Garcia, and Michelle L. Meyer
+**Authors** Matthew Shane Loop, Sarah C. Lotspeich, Tanya P. Garcia, and Michelle L. Meyer
 
-**Objective** During longitudinal studies, devices used to measure the exposure can change from visit to visit.
-By performing a "calibration study" where a subset of participants receive measurements from both devices at follow up, different statistical methods can be used to account for the changes.
-However, a comparison of different methods specific to exposures in cardiovascular epidemiology is lacking.
-Therefore, we compared two statistical methods in a hypothetical study of change in pulse wave velocity (PWV) and its association with total brain volume.
+**Objective** In longitudinal studies, devices used to measure exposures, like pulse wave velocity (PWV), can change from visit to visit.
+Calibration studies, where a subset of participants receive measurements from both devices at follow-up, are often used to assess differences in the device measurements.
+Regression calibration and multiple imputation are common statistical methods to correct for those differences, but no study yet exists to compare the two when the quantity of interest is change in the exposure over time.
+We compared both methods in a hypothetical study of change in PWV and its association with total brain volume.
 
-**Methods** We simulated true values of PWV at baseline ($X_B$) and follow up ($X_F$), as well as error-prone measurements of PWV using an "old" device and "new" device.
-We varied the simulation conditions so that the bias and measurement error of the old and new devices would differ.
-Two statistical methods were compared: *regression calibration*, or calibrating the new device measurements at follow up to the old device using linear regression in a subset of participants with both measurements at follow up; and *multiple imputation*.
-To compare the methods we used bias for the estimated association, relative efficiency for the estimated association, and bias for the standard error of the estimated association.
+**Methods** We simulated true values of PWV at baseline and follow up, as well as imperfect measurements of PWV using an "old" device and "new" device.
+Two statistical methods were compared: *regression calibration*, which calibrates the new device measurements at follow up to the old device using linear regression in a calibration study; and *multiple imputation*, which imputes the (mostly) missing old device measurements at follow up.
 
-For each of the 9 simulation conditions, we simulated 1,000 datasets each of size $n=2,500$.
-Approximately 50 participants (2%) in each iteration were chosen to participate in the calibration study at follow up and had measurements on the old and new devices.
-We used 200 bootstrap replicates to calculate the standard errors for the regression calibration method and 10 imputed datasets for the multiple imputation method.
+We varied the bias and measurement error of each device and for each scenario simulated 1,000 datasets of size $n=2,500$.
+Two percent of participants in each iteration were chosen to participate in the calibration study, and thus had measurements on the old and new devices at follow up.
+We used 200 bootstrap replicates to calculate the standard errors for the regression calibration method and 50 imputed datasets for the multiple imputation method.
+To compare the methods we used bias of the estimated association and how well the standard errors approximated the empirical standard errors.
 
-**Results** Regression calibration had almost 0 bias for the association between change in PWV and total brain volume when the old device had larger measurement error than the new device.
-When the two devices had equal measurement error or the new device had larger measurement error, regression calibration underestimated the association by approximately 6%.
+**Results** Regression calibration was virtually unbiased for the association between change in PWV and total brain volume when the old device had larger measurement error than the new device.
+The maximum bias for regression calibration across all scenarios was still small (6%).
 When the old device had more measurement error or the two devices had equal measurement error, multiple imputation underestimated the association by more than 10%.
 This underestimation was reduced to approximately 2% when the new device had a larger measurement error than the old device.
-In all scenarios, regression calibration underestimated the true standard error by approximately 35%.
+In all scenarios, regression calibration underestimated the empirical standard error by approximately 35%, while multiple imputation underestimated it by only 2-5%.
 
-**Conclusions** In analyses of change in PWV and a continuous outcome, when estimation is the main objective, regression calibration is favorable to multiple imputation.
-When null hypothesis significance testing is the main objective, multiple imputation may be favorable in order to better control the type 1 error rate.
-These conclusions should apply to other exposure-outcome relationships with similar ratios between the association's magnitude and the amount of measurement error.
+**Conclusions** In analyses of change in PWV and total brain volume, when unbiased estimation is the main objective, regression calibration is favorable to multiple imputation.
+When null hypothesis significance testing is the main objective, multiple imputation may be favorable in order to not underestimate the standard errors.
+We expect these conclusions to apply to other change in exposure and outcome relationships with similar ratios between the association's magnitude and the amount of measurement error.

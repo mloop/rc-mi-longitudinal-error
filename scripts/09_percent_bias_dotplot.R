@@ -13,7 +13,15 @@ bias_summary <- results %>%
     )
   ) %>%
   summarise(
-    bias = mean(estimate - true_value),
+    bias = mean(estimate - true_value)
+  ) %>%
+  mutate(
+    true_value = case_when(
+      term == "(Intercept)" ~ 1000,
+      term == "age_centered" ~ -4.267,
+      term == "female" ~ -125.217,
+      term == "w_diff_c" ~ -0.2
+    ), 
     percent_bias = bias / true_value * 100
   ) %>%
   ungroup() %>%
