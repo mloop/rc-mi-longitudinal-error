@@ -5,7 +5,7 @@
 #SBATCH -p general
 #SBATCH --nodes=4
 #SBATCH --ntasks-per-node=44
-#SBATCH -t 08:00:00
+#SBATCH -t 11:00:00
 #SBATCH --mail-type=END,FAIL
 
 module load R/4.2.1
@@ -15,6 +15,7 @@ Rscript 01_simulate_data.R
 Rscript 02_naive.R
 Rscript 03_complete_case.R
 Rscript 04_snipe.R
+Rscript 04_01_snipe_sandwich.R
 Rscript 05_01_split_datasets.R
 Rscript 05_02_create_imputations.R
 Rscript 05_03_pool_results.R

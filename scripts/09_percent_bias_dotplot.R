@@ -36,8 +36,8 @@ bias_summary <- results %>%
       sd_u_n > sd_u_o ~ "New measurement error 113 cm/s, old 50 cm/s",
       sd_u_n < sd_u_o ~ "New measurement error 50 cm/s, old 113 cm/s"
     ) %>% factor() %>% fct_relevel("New measurement error 50 cm/s, old 113 cm/s", "Measurement error equal (113 cm/s)"),
-    method = factor(method) %>% fct_recode("Regression calibration" = "snipe", "Naive" = "naive", "Multiple imputation" = "multiple imputation", "Complete case" = "complete case") %>%
-fct_relevel("Naive", "Complete case", "Regression calibration", "Multiple imputation")
+    method = factor(method) %>% fct_recode("Regression calibration (bootstrap)" = "snipe (bootstrap)", "Regression calibration (sandwich)" = "snipe (sandwich)", "Naive" = "naive", "Multiple imputation" = "multiple imputation", "Complete case" = "complete case") %>%
+fct_relevel("Naive", "Complete case", "Regression calibration (sandwich)", "Regression calibration (bootstrap)", "Multiple imputation")
 )
 
 p <- bias_summary %>%
