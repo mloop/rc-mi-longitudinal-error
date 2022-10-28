@@ -34,7 +34,7 @@ fit <- sims %>%
   unnest(fits)
 
 set.seed(928374)
-plan(multicore, workers = 172)
+plan(multicore, workers = 48)
 
 fit_boot_dfs <- sims %>%
   mutate(
@@ -51,7 +51,7 @@ fit_boot_dfs_boot <- fit_boot_dfs %>%
                        .options = furrr_options(seed = TRUE))
   ) 
 
-plan(multicore, workers = 172)
+plan(multicore, workers = 48)
 fit_boot_preds <- fit_boot_dfs_boot %>%
   unnest(calib_boot_lms) %>%
   mutate(
@@ -63,7 +63,7 @@ fit_boot_preds <- fit_boot_dfs_boot %>%
                             )
   )
 
-plan(multicore, workers = 172)
+plan(multicore, workers = 48)
 
 fit_boot_se <- fit_boot_preds %>%
   mutate(
