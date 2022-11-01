@@ -33,15 +33,14 @@ fit <- sims %>%
   select(-calib_fit, -df, -df_calib) %>%
   unnest(fits)
 
-set.seed(928374)
-plan(multicore, workers = 48)
-
 fit_boot_dfs <- sims %>%
   mutate(
     df  = map(df, ~ungroup(.x)),
     calib_df = map(df, ~filter(., sampled_for_calibration == 1))
   )
 
+set.seed(928374)
+plan(multisession, workers=48))
 fit_boot_dfs_boot <- fit_boot_dfs %>%
   mutate(
     calib_boot_lms = future_map2(calib_df, df, ~bootstraps(.x, times = 200, apparent = TRUE) %>%
@@ -51,7 +50,7 @@ fit_boot_dfs_boot <- fit_boot_dfs %>%
                        .options = furrr_options(seed = TRUE))
   ) 
 
-plan(multicore, workers = 48)
+plan(cluster)
 fit_boot_preds <- fit_boot_dfs_boot %>%
   unnest(calib_boot_lms) %>%
   mutate(
@@ -63,7 +62,7 @@ fit_boot_preds <- fit_boot_dfs_boot %>%
                             )
   )
 
-plan(multicore, workers = 48)
+plan(cluster)
 
 fit_boot_se <- fit_boot_preds %>%
   mutate(

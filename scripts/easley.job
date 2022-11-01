@@ -3,7 +3,9 @@
 #SBATCH --mem-per-cpu=100M
 #SBATCH --job-name=me-sim
 #SBATCH -p general
-#SBATCH --ntasks=176
+#SBATCH --ntasks=1
+#SBATCH -N 1
+#SBATCH --cpus-per-task=48
 #SBATCH -t 11:00:00
 #SBATCH --mail-type=END,FAIL
 
