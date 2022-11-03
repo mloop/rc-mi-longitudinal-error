@@ -1,12 +1,13 @@
 library(tidyverse)
 library(broom)
 library(rsample)
-library(furrr)
 library(tictoc)
+
+args = commandArgs(trailingOnly=TRUE)
 
 sims <- read_rds("../data/01_simulated_data.rds") %>%
   ungroup() %>%
-  slice(1:300)
+  slice(1:500)
 
 # Fit calibration bootstrap function
 fit_calib_on_bootstrap <- function(split) {
@@ -54,15 +55,20 @@ toc()
 
 tic()
 set.seed(928374)
-plan(multisession, workers = 14)
 
-fit_boot_dfs_boot <- fit_boot_dfs %>%
+ 
+
+for(i in 1:args){
+
+	x <- fit_boot_dfs[args,] %>%
   mutate(
-    calib_boot_lms = future_map2(calib_df, df, ~bootstraps(.x, times = 200, apparent = TRUE) %>%
+    calib_boot_lms = map2(calib_df, df, ~bootstraps(.x, times = 200, apparent = TRUE) %>%
                             mutate(
                               calib_boot_lm = map(splits, fit_calib_on_bootstrap)
                             ),
                             .options = furrr_options(seed = TRUE))
   )
 
+   write_rds(x, paste0("test-", args, ".rds", sep = ""))
+}
 toc()
