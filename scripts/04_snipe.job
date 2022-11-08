@@ -1,0 +1,14 @@
+#!/bin/bash
+
+#SBATCH --mem-per-cpu=100M
+#SBATCH --job-name=04_snipe
+#SBATCH -p nova
+#SBATCH --ntasks=1
+#SBATCH -N 1
+#SBATCH --cpus-per-task=24
+#SBATCH -t 5:00:00
+#SBATCH --mail-type=END,FAIL
+
+module load R/4.2.1
+
+srun Rscript 04_snipe.R

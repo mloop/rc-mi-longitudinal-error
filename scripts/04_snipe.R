@@ -40,7 +40,8 @@ fit_boot_dfs <- sims %>%
   )
 
 set.seed(928374)
-plan(multisession, workers=48))
+plan(multicore, workers = 24)
+
 fit_boot_dfs_boot <- fit_boot_dfs %>%
   mutate(
     calib_boot_lms = future_map2(calib_df, df, ~bootstraps(.x, times = 200, apparent = TRUE) %>%
@@ -50,11 +51,12 @@ fit_boot_dfs_boot <- fit_boot_dfs %>%
                        .options = furrr_options(seed = TRUE))
   ) 
 
-plan(cluster)
+
+plan(multicore, workers = 24)
 fit_boot_preds <- fit_boot_dfs_boot %>%
   unnest(calib_boot_lms) %>%
   mutate(
-    calib_boot_preds = future_map2(df, calib_boot_lm, ~modelr::add_predictions(.x, model = .y) %>%
+    calib_boot_preds = future_map2_dfr(df, calib_boot_lm, ~modelr::add_predictions(.x, model = .y) %>%
                               mutate(
                                 w_diff = if_else(sampled_for_calibration == 0, pred, w_f_o) - w_b_o,  # use the predicted follow up values on the old machine if not in the calibration study; otherwise use the observed values
                                 w_diff_c = scale(w_diff, scale = FALSE)  %>% as.numeric()
@@ -62,7 +64,7 @@ fit_boot_preds <- fit_boot_dfs_boot %>%
                             )
   )
 
-plan(cluster)
+plan(multicore, workers = 24)
 
 fit_boot_se <- fit_boot_preds %>%
   mutate(
