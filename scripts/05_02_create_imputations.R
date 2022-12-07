@@ -1,17 +1,16 @@
 library(tidyverse)
 library(broom)
 library(mice)
-library(furrr)
 
-set.seed(987234)
-
-plan(multicore, workers = 172)
-
+i = commandArgs(trailingOnly=TRUE)
 
 for(i in 1:1000){
-  sims %<-% read_rds(paste0("../output/05_01_", i, ".rds", sep = ""))
   
-  fit_imp <- sims %>%
+  set.seed(987234+i)
+
+  x <- read_rds(paste0("../output/05_01_", i, ".rds"))
+
+  fit_imp <- x %>%
     mutate(
       imp = map(df, ~mutate(., w_f_o = if_else(sampled_for_calibration == 1, w_f_o, NA_real_),
                             w_diff = NA) %>%
@@ -31,13 +30,13 @@ for(i in 1:1000){
       
       new_mids = map(modified_imp, ~as.mids(.)),
       fits = map(new_mids, ~with(., lm(brain_volume ~ w_diff_c + 
-                                                female + age_centered)) %>%
-                          pool() %>%
-                          tidy()
+                                         female + age_centered)) %>%
+                   pool() %>%
+                   tidy()
       )
     ) %>%
     select(-imp, -modified_imp, -df, -new_mids) %>%
     unnest(fits)
   
-  write_rds(fit_imp, file = paste0("../output/05_02_imp_fit_", i, ".rds"))
+  write_rds(fit_imp, paste0("../output/05_02_", i, ".rds"))
 }
