@@ -2,7 +2,6 @@ library(tidyverse)
 library(broom)
 library(mice)
 
-i = commandArgs(trailingOnly=TRUE)
 
 for(i in 1:1000){
   
