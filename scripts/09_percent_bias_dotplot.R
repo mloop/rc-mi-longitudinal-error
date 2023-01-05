@@ -13,7 +13,7 @@ bias_summary <- results %>%
     )
   ) %>%
   summarise(
-    bias = mean(estimate - true_value)
+    bias = mean(estimate) - true_value
   ) %>%
   mutate(
     true_value = case_when(

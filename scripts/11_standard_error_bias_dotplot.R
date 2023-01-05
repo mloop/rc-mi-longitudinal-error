@@ -30,9 +30,9 @@ p <- se_summary %>%
   filter(term == "w_diff_c") %>%
   ggplot(aes(x = se_diff_percent, y = method)) +
   geom_point() +
-  labs(x = "Difference (mean standard error - empirical standard error)", 
+  labs(x = "Relative difference: (mean standard error - empirical standard error)/empirical standard error", 
        y = "Method", 
-       title = str_wrap("Difference between mean standard error and empirical standard error for each method as measurement error and bias of each device changes", width = 80)) +
+       title = str_wrap("Relative difference between mean standard error and empirical standard error for each method as measurement error and bias of each device changes", width = 80)) +
   facet_grid(device_bias ~ measurement_error,
              labeller = labeller(device_bias = label_wrap_gen(width = 25),
                                  measurement_error = label_wrap_gen(width = 25))) +
