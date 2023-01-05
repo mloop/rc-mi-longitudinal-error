@@ -9,29 +9,31 @@ library(tidyverse)
 library(kableExtra)
 library(gtsummary)
 library(huxtable)
+library(sjlabelled)
 
 sims <- read_rds("../data/01_simulated_data.rds") %>%
+  ungroup() %>%
   slice(1) %>%
   unnest(df) %>%
-  select(id, female, age, measured_diff, brain_volume, pwv_visit1_measured, pwv_visit2_measured) %>%
-  mutate(diff_grouped  = Hmisc::cut2(round(measured_diff, 1), g = 3))
+  ungroup() %>%
+  select(id, female, age_trunc, x_b, x_f, w_b_o, w_f_n, brain_volume) %>%
+  mutate(sex = if_else(female == 1, "Female", "Male")) %>%
+  var_labels(sex = "Sex",
+             age_trunc = "Age (years)",
+             brain_volume = "Brain volume (cm^3)",
+             x_b = "True PWV at baseline (cm/s)",
+             x_f = "True PWV at follow-up (cm/s)",
+             w_b_o = "Error-prone measurement of PWV at baseline on old device (cm/s)",
+             w_f_n = "Error-prone measurement of PWV at follow-up on new device (cm/s)"
+             ) %>%
 
-sims_updated <- Hmisc::upData(sims,
-                              labels = list("female" = "Female",
-                                            "age" = "Age (years)",
-                                            "brain_volume" = "Brain volume (cm^3)",
-                                            "pwv_visit1_measured" = "PWV at visit 1 (measured)",
-                                            "pwv_visit2_measured" = "PWV at visit 2 (measured)",
-                                            "diff_grouped" = "Change in PWV between visits 1 and 2")
-                              )
+  select(-id, -female)
 ```
 
 ```{r}
-sims_updated %>%
-  select(-measured_diff, -id, -age) %>%
-  tbl_summary(
-    by = "diff_grouped"
-  ) %>%
+sims %>%
+  select(age_trunc, sex, x_b, w_b_o, x_f, w_f_n, brain_volume) %>%
+  tbl_summary() %>%
   as_flex_table()
 ```
 
