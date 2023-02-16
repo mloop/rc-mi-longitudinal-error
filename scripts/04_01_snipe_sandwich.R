@@ -8,14 +8,14 @@ sims <- read_rds("../data/01_simulated_data.rds")
 fit <- sims %>%
   mutate(
     df  = map(df, ~ungroup(.x)),
-    calib_fit = map(df, ~lm(w_f_o ~ w_f_n, data = filter(., sampled_for_calibration == 1))),  # Perform calibration study
+    calib_fit = map(df, ~lm(x_f ~ w_f_n + female + age_centered, data = filter(., sampled_for_calibration == 1))),  # Perform calibration study
     
     #####
     df_calib = map2(df, calib_fit, ~modelr::add_predictions(.x, model = .y) %>%
                       
                       ########
                     mutate(
-                      w_diff = if_else(sampled_for_calibration == 0, pred, w_f_o) - w_b_o,  # use the predicted follow up values on the old machine if not in the calibration study; otherwise use the observed values
+                      w_diff = pred - x_b,  # use the predicted follow up values on the old machine if not in the calibration study; otherwise use the observed values
                       w_diff_c = scale(w_diff, scale = FALSE)  %>% as.numeric()
                     )
     ),

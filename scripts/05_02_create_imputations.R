@@ -11,16 +11,16 @@ for(i in 1:1000){
 
   fit_imp <- x %>%
     mutate(
-      imp = map(df, ~mutate(., w_f_o = if_else(sampled_for_calibration == 1, w_f_o, NA_real_),
+      imp = map(df, ~mutate(., x_f_c = if_else(sampled_for_calibration == 1, x_f, NA_real_),  # x_f_c just is a renaming of the variable x_f, which we are setting to missing for those who weren't in the calibration study. It's the same as x_f for people who *were* in the calibration study.
                             w_diff = NA) %>%
-                  select(w_b_o, w_f_n, w_f_o, age_centered, female, brain_volume) %>%
+                  select(x_b, w_f_n, x_f_c, age_centered, female, brain_volume) %>%
                   mice(m = 50, 
                        printFlag = FALSE) %>%
                   mice::complete(action = "long", include = TRUE) %>% 
                   as_tibble()
       ),
       
-      modified_imp = map(imp, ~mutate(., w_diff = w_f_o - w_b_o) %>%
+      modified_imp = map(imp, ~mutate(., w_diff = x_f_c - x_b) %>%
                            group_by(.imp) %>%
                            mutate(
                              w_diff_c = scale(w_diff, scale = FALSE) %>% as.numeric()

@@ -8,7 +8,7 @@ dir.create("../output/", showWarnings = FALSE)
 # Fit simple linear regression model to observed
 fit <- sims %>%
   mutate(
-    fits = map(df, ~mutate(., w_diff = w_f_n - w_b_o,
+    fits = map(df, ~mutate(., w_diff = w_f_n - x_b,
                            w_diff_c = scale(w_diff, scale = FALSE) %>% as.numeric()) %>%
                  lm(brain_volume ~ w_diff_c + female + age_centered, data = .) %>%
                  tidy())
