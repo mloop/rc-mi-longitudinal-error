@@ -6,18 +6,15 @@ n <- 2500
 
 # Create simulation conditions
 
-conditions <- expand_grid(mu_u_o = c(10, 15), 
-                          mu_u_n = c(10, 15), 
-                          sd_u_o = c(112.8, 50), 
-                          sd_u_n = c(112.8, 50)) %>%
-  slice(-4, -8, -12, -16) %>%
-  slice(-10, -11, -12)
+conditions <- expand_grid(
+                          mu_u_n = c(0), 
+                          sd_u_n = c(100, 50))
 
 conditions
 
 # Write function for data generation
 
-genesis <- function(mu_u_o, mu_u_n, sd_u_o, sd_u_n, ...){
+genesis <- function(mu_u_n, sd_u_n, ...){
   x <- tibble(
     id = seq(1, n, 1),
     x_b = truncnorm::rtruncnorm(n, mean = 1100, sd = 350, a = 300, b = 2500),
@@ -32,15 +29,12 @@ genesis <- function(mu_u_o, mu_u_n, sd_u_o, sd_u_n, ...){
       x_f = truncnorm::rtruncnorm(1, mean = (1120 + 0.1 * x_b_c - 5 * female), sd = 300, a = 300, b = 2500), # PWV after 5 years
       
       # Create two different measurements of PWV, with measurement error, where the distribution is different at the different time points, due to different machines.
-      
-      w_b_o = truncnorm::rtruncnorm(1, mean = x_b + mu_u_o, sd = sd_u_o, a = 300, b = 2500) %>% as.numeric(),
+    
       
       w_f_n = truncnorm::rtruncnorm(1, mean = x_f + mu_u_n, sd = sd_u_n, a = 300, b = 2500),
       
-      w_f_o = truncnorm::rtruncnorm(1, mean = x_f + mu_u_o, sd = sd_u_o, a = 300, b = 2500),
-      
       x_diff = x_f - x_b,
-      w_diff = w_f_n - w_b_o
+      w_diff = w_f_n - x_b
     ) %>% 
     ungroup() %>%
     mutate(
@@ -62,11 +56,11 @@ genesis <- function(mu_u_o, mu_u_n, sd_u_o, sd_u_n, ...){
 sims <- 
   expand_grid(iteration = seq(1, 1000, 1),
               conditions) %>%
-  group_by(iteration, mu_u_o, mu_u_n, sd_u_o, sd_u_n) %>%
+  group_by(iteration, mu_u_n, sd_u_n) %>%
   nest() %>%
   mutate(
-    df = pmap(list(mu_u_o, mu_u_n, sd_u_o, sd_u_n), ~genesis(mu_u_o, mu_u_n, sd_u_o, sd_u_n) %>%
-                select(id, x_b, x_f, x_diff, x_diff_c, w_b_o, w_f_n, w_f_o, sampled_for_calibration, age_trunc, age_centered, female, brain_volume))
+    df = pmap(list(mu_u_n, sd_u_n), ~genesis(mu_u_n, sd_u_n) %>%
+                select(id, x_b, x_f, x_diff, x_diff_c, w_f_n, sampled_for_calibration, age_trunc, age_centered, female, brain_volume))
   )
 
 dir.create("../data/", showWarnings = FALSE)
