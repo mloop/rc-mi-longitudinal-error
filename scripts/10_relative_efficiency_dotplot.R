@@ -25,6 +25,6 @@ p <- re_summary %>%
   theme(
     plot.title.position = "plot"
   ) +
-  scale_color_manual(values = c("#0C2340", "#E87722"), name = str_wrap("Measurement error at follow-up (cm/s)", 10))
+  scale_color_manual(values = c("#03244d", "#dd550c", "#496e9c"), name = str_wrap("Measurement error at follow-up (cm/s)", 10))
 
 ggsave("../figs/10_relative_efficiency_dotplot.pdf", p, width = 7, height = 4, units = "in")

@@ -42,7 +42,7 @@ p <- bias_summary %>%
   labs(x = "Percent bias for association of interest", 
        y = "", 
        title = "Percent bias of each method as measurement error at follow-up changes") +
-  scale_color_manual(values = c("#0C2340", "#E87722"), name = str_wrap("Measurement error at follow-up (cm/s)", 10)) +
+  scale_color_manual(values = c("#03244d", "#dd550c", "#496e9c"), name = str_wrap("Measurement error at follow-up (cm/s)", 10)) +
   theme(
     plot.title.position = "plot"
   )

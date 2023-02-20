@@ -8,7 +8,7 @@ n <- 2500
 
 conditions <- expand_grid(
                           mu_u_n = c(0), 
-                          sd_u_n = c(100, 50))
+                          sd_u_n = c(100, 50, 150))
 
 conditions
 

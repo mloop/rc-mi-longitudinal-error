@@ -8,7 +8,7 @@ sims <- read_rds("../data/01_simulated_data.rds")
 fit <- sims %>%
   mutate(
     df  = map(df, ~ungroup(.x)),
-    calib_fit = map(df, ~lm(x_f ~ w_f_n + female + age_centered, data = filter(., sampled_for_calibration == 1))),  # Perform calibration study
+    calib_fit = map(df, ~lm(x_f ~ w_f_n + female + age_centered + x_b, data = filter(., sampled_for_calibration == 1))),  # Perform calibration study
     
     #####
     df_calib = map2(df, calib_fit, ~modelr::add_predictions(.x, model = .y) %>%
