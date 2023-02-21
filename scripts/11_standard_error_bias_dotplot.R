@@ -19,7 +19,7 @@ se_summary <- results %>%
 p <- se_summary %>%
   filter(term == "w_diff_c") %>%
   ggplot(aes(x = se_diff_percent, y = method, color = factor(sd_u_n))) +
-  geom_point() +
+  geom_point(position = position_dodge(0.8)) +
   labs(x = str_wrap("Relative difference: (mean standard error - empirical standard error)/empirical standard error", 40), 
        y = "", 
        title = str_wrap("Relative difference between mean standard error and empirical standard error for each method as measurement error at follow-up changes", width = 80)) +

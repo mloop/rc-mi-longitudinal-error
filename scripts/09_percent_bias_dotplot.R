@@ -37,7 +37,7 @@ fct_relevel("Naive", "Complete case", "Regression calibration (sandwich)", "Mult
 p <- bias_summary %>%
   filter(term == "w_diff_c") %>%
   ggplot(aes(x = percent_bias, y = method, color = factor(sd_u_n))) +
-  geom_point() +
+  geom_point(position = position_dodge(0.8)) +
   geom_vline(xintercept = 0, linetype = "dashed") +
   labs(x = "Percent bias for association of interest", 
        y = "", 
