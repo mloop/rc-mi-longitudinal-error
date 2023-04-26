@@ -1,0 +1,39 @@
+---
+output: word_document
+---
+
+```{r, include=F}
+knitr::opts_chunk$set(echo=F, message=F, warning=F)
+
+library(tidyverse)
+library(kableExtra)
+library(gtsummary)
+library(huxtable)
+library(sjlabelled)
+
+sims <- read_rds("../data/01_simulated_data.rds") %>%
+  ungroup() %>%
+  slice(1) %>%
+  unnest(df) %>%
+  ungroup() %>%
+  select(id, female, age_trunc, x_b, x_f, w_b_o, w_f_n, brain_volume) %>%
+  mutate(sex = if_else(female == 1, "Female", "Male")) %>%
+  var_labels(sex = "Sex",
+             age_trunc = "Age (years)",
+             brain_volume = "Brain volume (cm^3)",
+             x_b = "True PWV at baseline (cm/s)",
+             x_f = "True PWV at follow-up (cm/s)",
+             w_b_o = "Error-prone measurement of PWV at baseline on old device (cm/s)",
+             w_f_n = "Error-prone measurement of PWV at follow-up on new device (cm/s)"
+             ) %>%
+
+  select(-id, -female)
+```
+
+```{r}
+sims %>%
+  select(age_trunc, sex, x_b, w_b_o, x_f, w_f_n, brain_volume) %>%
+  tbl_summary() %>%
+  as_flex_table()
+```
+

@@ -1,0 +1,65 @@
+---
+title: "Lab notebook"
+author: "Matthew Loop"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(rstan)
+library(tidybayes)
+simple_lm <- read_rds(file = "output/2021-01-04/02_simple_lm.rds")
+
+df <- read_rds("data/01_simulated_data.rds")
+```
+
+## 2021-01-04
+
+Recently, I have had trouble recovering the true model parameters from the `stan` model that tries to account for measurement error in both machines. 
+So I tried to recover the generative model using plain linear regression and the true values. Recall that the generative model for PWV at visit 2 was $$PWV_2 \sim N(\mu = 20 + 1 * PWV_1 - 5 * female, \sigma = 10)$$
+
+The estimates from a simple fit of `lm(pwv_visit2 ~ pwv_visit1 + female, data = df)` was used. Here were the parameter estimates:
+
+```{r}
+broom::tidy(simple_lm) %>%
+  knitr::kable(digits = 2)
+```
+
+So the simple linear model on the *true* values nailed the generative model. What about the variance? 
+
+```{r}
+summary(simple_lm)$sigma
+```
+
+Nailed that, too. So it is the measurement error that's creating the problem.
+
+What happens if we fit the model to the mismeasured data?
+
+```{r}
+simple_lm_obs <- read_rds("output/2021-01-04/02_simple_lm_observed.rds")
+broom::tidy(simple_lm_obs) %>% knitr::kable(digits = 2)
+```
+
+```{r}
+summary(simple_lm_obs)$sigma
+```
+
+So the intercept was overestimated by 50% and the standard deviation was overestimated by 100%. The standard error estimate for the intercept also tripled. Perhaps the effect of female sex was a little underestimated. The coefficient for the first visit PWV was correct. So we overestimate the true variability because the measurement error has added additional noise to the generative model. We have to separate out the measurement error from the true error. 
+
+Next I tried to have a measurement error model for PWV at visit 2 and visit 1. Here is the stan code
+
+```{bash}
+cat scripts/02_model.stan
+```
+
+Here are the summaries:
+```{r}
+m <- read_rds("output/2021-01-04/02_stan_model.rds")
+m %>%
+  gather_draws(mu_u, beta, beta_1, sigma, mu_pwv_1, sigma_pwv_1) %>%
+  mean_qi() %>%
+  knitr::kable(digits = 2)
+```
+
+So it looks like, when modeling the measurement error in PWV at visit 1, we get a little closer. The intercept looks a little better, but the effect of female sex is still being underestimated. Plus, I'm getting a lot of warnings about maximum tree depth, bulk effective sample sizes, bayesian fraction of missing information, and tail effective sample sizes.

@@ -1,0 +1,153 @@
+---
+title: "Protocol"
+output: word_document
+date: "Last modified: `r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = F)
+```
+
+# The question
+
+Among observational studies using change in pulse wave velocity (PWV) from baseline to follow up as the main exposure, measured with two different error-prone devices at the two different time points, which statistical methods are best to use to estimate the association between change in PWV and a health outcome?
+
+## Statistical methods being compared
+
+1. Naive
+2. Complete case
+3. Regression calibration^[We previously called this single naive imputation of predicted exposure (SNIPE). After looking through the Word comments on the manuscript from Tanya and Sarah, I think we really are doing regression calibration. I just presented the problem in a way that made it difficult to see this fact.]
+4. Multiple imputation
+5. Fully Bayesian imputation
+
+## Definitions of 'best'
+
+1. Bias of association between change in PWV and health outcome
+2. Bias of standard error of estimated association between change in PWV and health outcome
+3. Relative efficiency of estimated association between change in PWV and health outcome
+
+# Notation
+* Throughout, we refer to pulse wave velocity as PWV
+* Let $X_B$ and $X_F$ denote the true PWV measurements at baseline and follow-up, respectively. These are unobserved.
+  * The exposure of primary interest for the study is $\Delta_X = X_F - X_B$. This is also unobserved.
+* Due to instrument error, *error-prone* PWV measurements $W_B$ and $W_F$ are actually observed. These measurements are error-prone measurements of $X_B$ and $X_F$, respectively. That is, we observe $W_B = X_B + U_B$ and $W_F = X_F + U_F$, were $U_B$ and $U_F$ denote error induced by the measurement.
+  * Based on the error-prone measurements of PWV, we have the naive measure of change in PWV $\Delta_W = W_F - W_B$.
+* Introduce superscripts $O$ or $N$ to the error-prone PWV measurements to indicate that they were measured on the old or new instruments, respectively, i.e.,
+  * $W_B^O$: error-prone PWV measured at baseline on old instrument (observed for everyone)
+    * Assume $U_B^O \sim N(\mu_{U_B^O}, \sigma_{U_B^O})$.
+  * $W_B^N$ : error-prone PWV measured at baseline on new instrument (not observed for anyone)
+  * $W_F^O$: error-prone PWV measured at follow-up on old instrument (observed for subsample of participants who will take place in a "calibration study")
+  * $W_F^N$ : error-prone PWV measured at follow-up on new instrument (observed for everyone)
+    * Assume $U_F^N \sim N(\mu_{U_F^N}, \sigma_{U_F^N})$.
+  * Assume that $\mu_{U_B^O} = \mu_{U_F^O}=\mu_{U^O}$. Likewise, assume $\sigma_{U_B^O} = \sigma_{U_F^O}=\sigma_{U^O}$.
+  * Assume that $\mu_{U_B^N} = \mu_{U_F^N}=\mu_{U^N}$. Likewise, assume $\sigma_{U_B^N} = \sigma_{U_F^N}=\sigma_{U^N}$.
+* Let $Y$ denote the outcome, a measure of brain volume taken at follow-up. 
+* Let $Z$ denote a vector of additional (fully observed) covariates.
+
+# Description of statistical methods being compared
+
+### Naive
+This approach will assume that $W=X$ and that no special analysis needs to be done.
+
+Your analysis set is $i = 1,\dots,n$, where $n$ is the total number of participants who participated in baseline and follow up.
+
+Exposure: $\Delta W_{i,centered} = \Delta W_i - \overline{\Delta W_i}$, where $\Delta W_i = (W_{i,F}^N - W_{i,B}^O)$
+
+Outcome regression model of interest: $E[Y_i] = \beta_0 + \Delta W_{i,centered}\beta_1 + female_i\beta_2 + age_{i,centered}\beta_3$
+
+### Complete case
+This approach will use only participants who participated in the calibration study at follow up (approximately 50). The change in PWV will be calculated by subtracting the measurement on the old device at followup from the measurement on the old device at baseline for this small subset of participants. 
+
+Your analysis set is $j = 1, \dots,m$, where $m$ is the number of participants who participated in the calibration study at followup. These participants would then have both a $W_B^O$ and a $W_F^O$.
+
+Exposure: $\Delta W_{j,centered} = \Delta W_j - \overline{\Delta W_j}$, where $\Delta W_j = (W_{j,F}^O - W_{j,B}^O)$
+
+Outcome regression model of interest: $E[Y_j] = \beta_0 + \Delta W_{j,centered}\beta_1 + female_j\beta_2 + age_{j,centered}\beta_3$
+
+### Regression calibration
+This approach will use the calibration study at follow up to attempt to calibrate measurements on the old device to the new device. Then, the exposure will be calculated by taking the measurement on the new device at follow up minus the calibrated measurement on the old device at baseline.
+
+Your analysis set initially is $j = 1, \dots,m$, where $m$ is the number of participants who participated in the calibration study at followup. These subjects would have both $W_F^O$ and $W_F^N$.
+
+We then build the following regression model:
+
+$$E[W_{F,j}^O] = \gamma_0 + W_{F,j}^N\gamma_1$$
+
+After fitting this model, we estimate $\hat{E[W_{i,F}^O]}$ for $i = 1,\dots,n$.^[This moment is where the approach we detail here departs from the classic regression calibration approach in measurement error studies. In classic studies, all subjects have $W$ and some subjects have $X$. The regression equation is then $E[X_j] = \gamma_0 + W_j\gamma_1$. Then, $\hat{E[X_j]}$ is used as the exposure for all participants in the health outcome regression that you are actually trying to study. In our study, instead of calibrating the error-prone measurement to the true measurement, we are calibrating one error-prone measurement to a different error-prone measurement.] In other words, we use the regression calibration model above to predict what the follow up measurements would have looked like if the old device had been used. The analysis set is now $i = 1,\dots,n$, where $n$ is the total number of participants who participated in baseline and follow up.
+
+$$\hat{W}_{F,i}^O = \hat{\gamma_0} + W_{F,i}^N\hat{\gamma_1}$$
+
+Exposure: $\Delta W_{i,centered} = \Delta W_i - \overline{\Delta W_i}$, where $\Delta W_i = \hat{E[W_{i,F}^O|W_{i,F}^N]}  - W_{i,B}^O$
+
+Outcome regression model of interest: $E[Y_i] = \beta_0 + \Delta W_{i,centered}\beta_1 + female_i\beta_2 + age_{i,centered}\beta_3$
+
+Calculation of the standard errors for the regression calibration approach is a little more complex than other methods. In order to take into account the uncertainty generated by using predicted values in place of observed values, we must bootstrap the standard errors. The bootstrap procedure must be implemented on the subsample of participants selected to be in the calibration study. Thus, the full implementation of the procedure would look like:
+
+1. randomly select $m$ participants to participate in the calibration study and get their measurements
+2. using the regression calibration approach, estimate $\beta_1$ from $E[Y_i] = \beta_0 + \Delta W_{i,centered}\beta_1 + female_i\beta_2 + age_{i,centered}\beta_3$ from those $m$ participants
+3. create $B$ bootstrap samples (with replacement) of these $m$ participants and repeat the following steps for each bootstrap sample
+    * Estimate $\hat{\gamma}_1$ using linear regression
+    * Obtain $\hat{E[W_{i,F}^O | W_{i,F}^N]}$ for all $i$
+    * Calculate $\Delta W_{i,centered}$ for all $i$
+    * Estimate $\beta_1$ from $E[Y_i] = \beta_0 + \Delta W_{i,centered}\beta_1 + female_i\beta_2 + age_{i,centered}\beta_3$
+4. the standard deviation of the $\beta_1$s from step 3 will serve as an estimate of the standard error for the estimate from step 2
+
+### Multiple imputation
+With this approach, the $W_F^O$ among $k$ participants at follow up who did not participate in the calibration study ($n-m = k$) is unobserved. These unobserved values are treated as missing data. Multiple imputation is used to impute these missing values, the exposure is defined as the observed/imputed $W_F^O$ minus the observed $W_B^O$. This approach has good potential because all participants have a measurement on the new machine, which should be a great imputation variable for the measurement on the old machine. The imputations are done using $W_B^O$, $W_F^N$, $W_F^O$, $Y$, and $Z$.
+
+The analysis set is $i = 1,\dots,n$, where $n$ is the total number of participants who participated in baseline and follow up.
+
+We create 100 imputed datasets, where we are imputing $W_F^O$ because it is missing for most participants. We fit the outcome regression model of interest in each of the 100 datasets and combine the results according to Rubin's Rules.
+
+Exposure: $\Delta W_{i,centered} = \Delta W_i - \overline{\Delta W_i}$, where $\Delta W_i = (W_{i,F}^O - W_{i,B}^O)$
+Outcome regression model of interest: $E[Y_i] = \beta_0 + \Delta W_{i,centered}\beta_1 + female_i\beta_2 + age_{i,centered}\beta_3$
+
+# Simulation conditions
+
+All iterations of the simulation will assume:
+
+1. a sample size of 2,500 participants
+2. truncated normal distributions for PWV, with the bounds between 300 and 2500 cm/s
+3. $X_F \sim truncN(1120 + 0.1 X_{B,centered} - 5 *female, \sigma = 300, a = 300, b = 2500)$
+4. 50 of the participants are randomly sampled for the calibration study at follow up
+5. the overall health question of interest is the relationship between brain volume at follow up and change in PWV between baseline and follow up, with an assumed regression equation of $\textrm{Brain volume} \sim N(1000 - 0.2*\Delta X_{centered} - 125.217 * female - 4.267* age_{centered}, \sigma = 107)$
+6. $X_B \sim truncN(\mu = 1100, \sigma = 350, a = 300, b = 2500)$
+
+## Conditions that will vary
+
+1. whether the baseline ($U^O$) or follow up ($U^N$) measurement error term is more biased, or whether they have equal bias for $X_B$ and $X_F$ (i.e., $\mu_{U^O} > \mu_{U^N}, \mu_{U^O} < \mu_{U^N}$, or $\mu_{U^O} = \mu_{U^N}$)
+2. whether the baseline ($U^O$) or follow up ($U^N$) measurement error term error is larger, or whether they have equal error for $X_B$ and $X_F$ (i.e., $\sigma_{U^O} > \sigma_{U^N}, \sigma_{U^O} < \sigma_{U^N}$, or $\sigma_{U^O} = \sigma_{U^N}$)
+
+```{r, echo  =F}
+library(tidyverse)
+
+set.seed(74838)
+
+n <- 2500
+
+# Create simulation conditions
+
+conditions <- expand_grid(mu_u_o = c(10, 15), 
+                          mu_u_n = c(10, 15), 
+                          sd_u_o = c(112.8, 50), 
+                          sd_u_n = c(112.8, 50)) %>%
+  slice(-4, -8, -12, -16) %>%
+  slice(-10, -11, -12)
+conditions %>% knitr::kable()
+```
+
+# Description of how performance will be compared definition of 'best'
+
+Recall that the overall health question of interest is the relationship between brain volume at follow up and change in PWV between baseline and follow up, with an assumed regression equation of $$\textrm{Brain volume} \sim N(1000 - 0.2*\Delta X_{centered} - 125.217 * female - 4.267* age_{centered}, \sigma = 107)$$
+
+Because we do not observe $\Delta X$, we have described a few different statistical methods to use $\Delta W$ instead. In order to compare the performance of these methods, we will use the following measures.
+
+1. Bias of $\hat{\beta}_1$ for $\beta_1$
+2. Bias of $\hat{\sigma}_{\hat{\beta}_1}$ for $\sigma_{\hat{\beta}_1}$^[When calculating this true value, we will use the empirical standard error calculated across simulation replicates when $\Delta X$ is known.] when $\Delta X$ is known
+3. Relative efficiency of $\hat{\sigma}_{\hat{\beta}_1}$ compared to $\sigma_{\hat{\beta}_1}$ when $\Delta X$ is known.
+
+# History of revisions
+```{bash}
+git log --pretty protocol.Rmd
+```
+

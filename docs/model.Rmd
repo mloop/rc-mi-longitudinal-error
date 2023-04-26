@@ -1,0 +1,113 @@
+---
+title: "Model formulation for pulse wave velocity measurement error project"
+author: Matthew Shane Loop, Sarah Lotspeich, and Tanya Garcia
+date: "Last updated on: `r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data story
+
+Assume that we have collected pulse wave velocity (PWV) on a set of 2,500 participants at two time points, 5 years apart. We are interested in understanding how change in PWV may be associated with total brain volume. However, we used a different machine at the first visit than the second visit. The two machines have known measurement error. Therefore, we will try to build a model that accounts for the measurement error in each machine and estimates the estimand of interest (i.e., linear regression parameter for a 1-unit change in PWV and mean change in total brain volume).
+
+# Notation
+
+* Throughout, we refer to pulse wave velocity as PWV
+* Let $X_B$ and $X_F$ denote the true PWV measurements at baseline and follow-up, respectively. These are unobserved.
+  * The exposure of primary interest for the study is $\Delta_X = X_F - X_B$. This is also unobserved.
+* Due to instrument error, *error-prone* PWV measurements $W_B$ and $W_F$ are actually observed. These measurements are error-prone measurements of $X_B$ and $X_F$, respectively. That is, we observe $W_B = X_B + U_B$ and $W_F = X_F + U_F$, were $U_B$ and $U_F$ denote error induced by the measurement.
+  * Based on the error-prone measurements of PWV, we have the naive measure of change in PWV $\Delta_W = W_F - W_B$.
+* Introduce superscripts $O$ or $N$ to the error-prone PWV measurements to indicate that they were measured on the old or new instruments, respectively, i.e.,
+  * $W_B^O$: error-prone PWV measured at baseline on old instrument (observed for everyone)
+    * Assume $U_B^O \sim N(\mu_{U_B^O}, \sigma_{U_B^O})$.
+  * $W_B^N$ : error-prone PWV measured at baseline on new instrument (not observed for anyone)
+  * $W_F^O$: error-prone PWV measured at follow-up on old instrument (observed for subsample)
+  * $W_F^N$ : error-prone PWV measured at follow-up on new instrument (observed for everyone)
+    * Assume $U_F^N \sim N(\mu_{U_F^N}, \sigma_{U_F^N})$.
+  * Assume that $\mu_{U_B^O} = \mu_{U_F^O}=\mu_{U^O}$. Likewise, assume $\sigma_{U_B^O} = \sigma_{U_F^O}=\sigma_{U^O}$.
+  * Assume that $\mu_{U_B^N} = \mu_{U_F^N}=\mu_{U^N}$. Likewise, assume $\sigma_{U_B^N} = \sigma_{U_F^N}=\sigma_{U^N}$.
+* Let $Y$ denote the outcome, a measure of brain health taken at follow-up. 
+* Let $Z$ denote a vector of additional (fully observed) covariates.
+
+# Data generating processes for true values and values measured with error
+
+In this model, we will assume that $\sigma_{U_B^O} = \sigma_{U_F^N} = \sigma_U = 112.8$.
+
+$$X_{B,i} \sim N(\mu_B, \sigma_{X_B})$$
+
+$$X_{F,i} \sim N(\mu_{F,i} = \alpha_0 + X_{B,i}\alpha_1 + \mathbf{Z}_i \boldsymbol{\alpha}, \sigma_{X_F})$$
+
+$$W_{B,i}^O|X_{B,i} \sim N(X_{B,i}+\mu_{U_B^O}, 112.8)$$
+
+$$W_{F,i}^N|X_{F,i} \sim N(X_{F,i}+\mu_{U_F^N}, 112.8)$$
+The model of primary clinical interest is
+$$Y_{F,i} \sim N(\mu_{Y_{F,i}} = \beta_0 + \Delta_X\beta_1 + \mathbf{Z}_i\boldsymbol\beta, \sigma_{Y_F})$$
+$\beta_1$ is the estimand of interest for the project. However, there are two main challenges for calculating $\Delta_X$:
+
+1. We don't observe $X_{B_i}$ or $X_{F_i}$ for all $i$. We instead observe $W_{B,i}$ and $W_{F,i}$. This issue is called **measurement error**.
+2. There are **between-instrument differences** (e.g., $\mu_{U_B^O} \ne \mu_{U_F^N} \ne 0$), and these differences are not measurement error.^[Sarah, do we just call these between-instrument differences?]
+
+# (Regression?) Calibration method
+
+Now we describe how the calibration method might be used. Assume there is a subsample $m$ of the total sample $n$, $m \in n$. Let $i$ be an index for observations from $1,\dots,n$ and $j$ be an index for observations from $1,\dots,m$.
+
+Assume that we conduct a calibration study where we obtain $W_F^O$ on $m$ subjects . We then build the following regression model:
+
+$$W_{F,j}^N \sim N(\gamma_0 + W_{F,j}^O\gamma_1, \sigma_{W_F^{N,O}})$$
+
+After estimating the parameters of this model, we estimate the following quantity:
+
+$$\hat{W}_{B,i}^N = \hat{\gamma_0} + W_{B,i}^O\hat{\gamma_1}$$
+
+* The unobserved, primary exposure of interest $\Delta_X$ is estimated by $\Delta_{W_{C,i}} = W_{F,i}^N - \widehat{W}_{B,i}^N$, where $W_{C,i}$ is the calibrated difference in the error-prone measurements of PWV.
+* The model of primary clinical interest is estimated by substituting $\Delta_{W_{C,i}}$ for $\Delta_X$.
+* This method rests on the hope that $E[\widehat{W}_{B,i}^N] = X_B + \mu_{U^N}$, or an unbiased estimator of what the measurement with the new device would have been at baseline. If that is the case, then $E[\Delta_{W_C} | \Delta_X] = (X_F + \mu_{U^N}) - (X_B + \mu_{U^N}) = X_F - X_B$. In other words, that assumption would make $\Delta_{W_C}$ an unbiased estimator of $\Delta_X$.
+* It's not totally clear to me what the hope of this calibration method is. It seems the hope is that $E[\Delta_X] = E[\Delta_W]$, but
+  1. this goal is a pretty low bar (much like BLUP);
+  2. it's only true if $\hat{\gamma}_1=1$, which occurs only when $W_F^N$ and $W_B^O$ are perfectly correlated. (see [*here*](https://workflowy.com/s/change-model-notatio/IOv8rCrL59EDFImT) for handwritten notes)
+
+# Bayesian measurement error model
+
+Now let's assume we did not do a calibration study.
+
+The full set of distribution assumptions for the Bayesian model is as follows:
+
+$$Y_{F,i} \sim N(\mu_{Y_{F,i}} = \beta_0 + \Delta_X\beta_1 + \mathbf{Z}_i\boldsymbol\beta, \sigma_{Y_F})$$
+$$
+\Delta_X = X_F - X_B
+$$
+$$W_{B,i}^O \sim N(X_{B,i} + \mu_{U_B^O},112.8)$$
+$$W_{F,i}^N \sim N(X_{F,i} + \mu_{U_F^N},112.8)$$
+
+
+* I don't think $\mu_{U_B^O}$ and $\mu_{U_F^N}$ are identifiable without a calibration study at the second visit.
+
+$$X_{B,i} \sim \textrm{truncated Normal}(\mu_{X_B}, \sigma_{X_B}, a = 300, b = 2500)$$
+$$X_{F,i} \sim \textrm{truncated Normal}(\mu_{X_F}, \sigma_{X_F}, a = 300, b = 2500)$$
+And here are the priors:
+
+\begin{align}
+\beta_0 & \sim N(1000,200) \\
+\beta_1 & \sim N(0, 5) \\
+\boldsymbol\beta^* & \sim N(0,5) \\ 
+\sigma_{Y_F} & \sim \textrm{Student half-}t(50, 3, 10) \\ 
+\mu_{X_B},\mu_{X_F} & \sim \textrm{truncated Normal}(1100,200, a = 300, b = 2500) \\
+\sigma_{X_B} & \sim \textrm{Student half-}t(1100, 300, 100) \\ 
+\sigma_{X_F} & \sim \textrm{Student half-}t(1100, 50, 100)
+\end{align}
+
+
+$^*$ The prior for the association for female sex is actually distributed $N(0, 200)$, given the very different scale of the effect for these binary vs. continuous variables.
+
+* The data is actually generated and fit using the centered version of $\Delta_X$, but I don't think this should fundamentally change anything. That's where the informative prior for $\beta_0$ comes in, because we know in general the distribution of $Y_F$ in the sample. Our approach is thus a somewhat *empirical Bayes* approach.
+
+$$[\beta_0, \beta_1, \boldsymbol\beta,\boldsymbol\Delta_X|\mathbf{Y}_F,\mathbf{W}_B^O,\mathbf{W}_F^N,\mathbf{Z}] \propto [\mathbf{Y}_F|\beta_0, \beta_1, \boldsymbol\beta, \boldsymbol\Delta_X] [\mathbf{W}_B^O,\mathbf{W}_F^N|\boldsymbol\Delta_X][\boldsymbol\Delta_X,\dots]$$
+
+* The joint posterior distribution is estimated using Hamiltonian Monte Carlo in the Stan programming language.
+
+# Hypothesis of simulation study
+
+We are assuming that $\hat{\beta}_1 = \sum_{k=1}^R \hat{\beta}_{1,k}$ from the Bayesian model is less biased for $\beta_1$ than $\hat{\beta}_1$ using the calibrated exposure $\Delta_{W_C}$.
