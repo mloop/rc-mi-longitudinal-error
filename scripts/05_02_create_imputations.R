@@ -14,7 +14,7 @@ for(i in 1:1000){
       imp = map(df, ~mutate(., x_f_c = if_else(sampled_for_calibration == 1, x_f, NA_real_),  # x_f_c just is a renaming of the variable x_f, which we are setting to missing for those who weren't in the calibration study. It's the same as x_f for people who *were* in the calibration study.
                             w_diff = NA) %>%
                   select(x_b, w_f_n, x_f_c, age_centered, female, brain_volume) %>%
-                  mice(m = 50, 
+                  mice(m = 100, 
                        printFlag = FALSE) %>%
                   mice::complete(action = "long", include = TRUE) %>% 
                   as_tibble()
