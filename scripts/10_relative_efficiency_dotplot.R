@@ -14,12 +14,11 @@ p <- re_summary[term == "w_diff_c", ] |>
   ggplot(aes(x = relative_efficiency, y = method, color = factor(sd_u_n))) +
   geom_point(position = position_dodge(0.8)) +
   labs(x = "Relative efficiency of estimate for association of interest", 
-       y = "", 
-       title = stringr::str_wrap("Relative efficiency of each method as measurement error at follow-up changes"), 30) +
+       y = "") +
   geom_vline(xintercept = 1, linetype = "dashed") +
   theme(
     plot.title.position = "plot"
   ) +
   scale_color_manual(values = c("#03244d", "#dd550c", "#496e9c"), name = stringr::str_wrap("Measurement error at follow-up (cm/s)", 10), breaks = c(150, 100, 50))
 
-ggsave("../figs/10_relative_efficiency_dotplot.pdf", p, width = 7, height = 4, units = "in")
+ggsave("../figs/10_relative_efficiency_dotplot.pdf", p, width = 7, height = 3, units = "in")
