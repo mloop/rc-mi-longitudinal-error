@@ -7,7 +7,7 @@ results <- read_rds("../output/08_results.rds") |> setDT()
 re_summary <- results[, .(empirical_standard_error = sd(estimate)), by = .(sd_u_n, term, method)
                       ][, empirical_standard_error := empirical_standard_error, keyby = .(sd_u_n, term, method)
                         ][, relative_efficiency := (1 / empirical_standard_error^2) / (1 / empirical_standard_error[.N]^2), by = .(sd_u_n, term)
-                          ][.(method = c("snipe (sandwich)", "naive", "multiple imputation", "complete case", "true"), to = c("Regression calibration (sandwich)", "Naive", "Multiple imputation", "Complete case", "True")), on = "method", method := i.to
+                          ][.(method = c("snipe (sandwich)", "naive", "multiple imputation", "complete case", "true"), to = c("Regression calibration (sandwich)", "Naive", "Multiple imputation", "Complete case", "Control")), on = "method", method := i.to
 ][, method := forcats::as_factor(method) |> forcats::fct_relevel("Naive", "Complete case", "Regression calibration (sandwich)", "Multiple imputation")]
 
 p <- re_summary[term == "w_diff_c", ] |>
@@ -16,6 +16,7 @@ p <- re_summary[term == "w_diff_c", ] |>
   labs(x = "Relative efficiency of estimate for association of interest", 
        y = "") +
   geom_vline(xintercept = 1, linetype = "dashed") +
+  theme_bw() +
   theme(
     plot.title.position = "plot"
   ) +

@@ -9,7 +9,7 @@ bias_summary <- results[term == "(Intercept)", true_value := 1000
                           ][term == "female", true_value := -125.217
                             ][term == "w_diff_c", true_value := -0.2
                               ][, .(bias = mean(estimate - true_value), percent_bias = mean(estimate - true_value) / mean(true_value)), by = .(sd_u_n, term, method)
-                                ][.(method = c("snipe (sandwich)", "naive", "multiple imputation", "complete case", "true"), to = c("Regression calibration (sandwich)", "Naive", "Multiple imputation", "Complete case", "True")), on = "method", method := i.to
+                                ][.(method = c("snipe (sandwich)", "naive", "multiple imputation", "complete case", "true"), to = c("Regression calibration (sandwich)", "Naive", "Multiple imputation", "Complete case", "Control")), on = "method", method := i.to
                                   ][, method := forcats::as_factor(method) |> forcats::fct_relevel("Naive", "Complete case", "Regression calibration (sandwich)", "Multiple imputation")]
 
 p <- bias_summary[term == "w_diff_c", ] |>
@@ -19,6 +19,7 @@ p <- bias_summary[term == "w_diff_c", ] |>
   labs(x = "Percent bias for association of interest", 
        y = "") +
   scale_color_manual(values = c("#03244d", "#dd550c", "#496e9c"), name = stringr::str_wrap("Measurement error at follow-up (cm/s)", 10), breaks = c(150, 100, 50)) +
+  theme_bw() +
   theme(
     plot.title.position = "plot"
   ) +

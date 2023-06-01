@@ -9,7 +9,7 @@ se_summary <- results[, .(empirical_standard_error = sd(estimate),
 ][,
   `:=` (se_diff = avg_se - empirical_standard_error,
         se_diff_percent = (avg_se - empirical_standard_error) / empirical_standard_error)
-][.(method = c("snipe (sandwich)", "naive", "multiple imputation", "complete case", "true"), to = c("Regression calibration (sandwich)", "Naive", "Multiple imputation", "Complete case", "True")), on = "method", method := i.to
+][.(method = c("snipe (sandwich)", "naive", "multiple imputation", "complete case", "true"), to = c("Regression calibration (sandwich)", "Naive", "Multiple imputation", "Complete case", "Control")), on = "method", method := i.to
 ][, method := forcats::as_factor(method) |> forcats::fct_relevel("Naive", "Complete case", "Regression calibration (sandwich)", "Multiple imputation")]
 
 p <- se_summary[term == "w_diff_c"] |>
@@ -19,6 +19,7 @@ p <- se_summary[term == "w_diff_c"] |>
   labs(x = stringr::str_wrap("Relative difference: (mean standard error - empirical standard error)/empirical standard error", 40), 
        y = "") +
   scale_color_manual(values = c("#03244d", "#dd550c", "#496e9c"), name = stringr::str_wrap("Measurement error at follow-up (cm/s)", 10), breaks = c(150, 100, 50)) +
+  theme_bw() +
   theme(
     plot.title.position = "plot"
   ) +
