@@ -15,7 +15,7 @@ fit <- sims %>%
                       
                       ########
                     mutate(
-                      w_diff = pred - x_b,  # use the predicted follow up values on the old machine if not in the calibration study; otherwise use the observed values
+                      w_diff = pred - x_b,
                       w_diff_c = scale(w_diff, scale = FALSE)  %>% as.numeric()
                     )
     ),
