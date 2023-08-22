@@ -7,8 +7,8 @@ results <- read_rds("../output/08_results.rds") |> setDT()
 re_summary <- results[, .(empirical_standard_error = sd(estimate)), by = .(sd_u_n, term, method)
                       ][, empirical_standard_error := empirical_standard_error, keyby = .(sd_u_n, term, method)
                         ][, relative_efficiency := (1 / empirical_standard_error^2) / (1 / empirical_standard_error[.N]^2), by = .(sd_u_n, term)
-                          ][.(method = c("snipe (sandwich)", "naive", "multiple imputation (pmm)", "multiple imputation (full stochastic)", "complete case", "true"), to = c("Regression calibration (sandwich)", "Naive", "Multiple imputation (PMM)", "Multiple imputation (full stochastic)", "Complete case", "Control")), on = "method", method := i.to
-][, method := forcats::as_factor(method) |> forcats::fct_relevel("Naive", "Complete case", "Regression calibration (sandwich)", "Multiple imputation (PMM)", "Multiple imputation (full stochastic)")]
+                          ][.(method = c("snipe (sandwich)", "snipe (boot)", "naive", "multiple imputation (pmm)", "multiple imputation (full stochastic)", "complete case", "true"), to = c("Regression calibration (sandwich)", "Regression calibration (bootstrap)", "Naive", "Multiple imputation (PMM)", "Multiple imputation (full stochastic)", "Complete case", "Control")), on = "method", method := i.to
+][, method := forcats::as_factor(method) |> forcats::fct_relevel("Naive", "Complete case", "Regression calibration (sandwich)", "Regression calibration (bootstrap)", "Multiple imputation (PMM)", "Multiple imputation (full stochastic)")]
 
 p <- re_summary[term == "w_diff_c", ] |>
   ggplot(aes(x = relative_efficiency, y = method, color = factor(sd_u_n))) +
