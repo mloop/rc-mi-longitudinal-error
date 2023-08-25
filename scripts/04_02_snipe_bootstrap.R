@@ -5,7 +5,20 @@ library(boot)
 sims <- read_rds("../data/01_simulated_data.rds")
 
 boot_rc <- function(data, index){
-  m <- lm(brain_volume ~ w_diff_c + female + age_centered, data = data[index, ])
+  d <- data[index, ]
+  
+  c <- filter(d, sampled_for_calibration == 1)
+  
+  c_fit <- lm(x_f ~ w_f_n + female + age_centered + x_b,
+              data = c)
+  
+  df_calib <- modelr::add_predictions(d, model = c_fit) %>%
+    mutate(
+      w_diff = pred - x_b,
+      w_diff_c = scale(w_diff, scale = FALSE)  %>% as.numeric()
+    )
+  
+  m <- lm(brain_volume ~ w_diff_c + female + age_centered, data = df_calib)
   
   est <- coef(m)["w_diff_c"] %>% as.numeric()
   
