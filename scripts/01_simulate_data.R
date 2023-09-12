@@ -6,7 +6,7 @@ n <- 2500
 
 # Create simulation conditions
 
-conditions <- expand_grid(
+conditions <- expand_grid(calibration_n = c(50, 250, 625),
                           mu_u_n = c(0), 
                           sd_u_n = c(100, 50, 150))
 
@@ -14,7 +14,7 @@ conditions
 
 # Write function for data generation
 
-genesis <- function(mu_u_n, sd_u_n, ...){
+genesis <- function(calibration_n, mu_u_n, sd_u_n, ...){
   x <- tibble(
     id = seq(1, n, 1),
     x_b = truncnorm::rtruncnorm(n, mean = 1100, sd = 350, a = 300, b = 2500),
@@ -40,7 +40,7 @@ genesis <- function(mu_u_n, sd_u_n, ...){
     mutate(
       x_diff_c = scale(x_diff, scale = FALSE) %>% as.numeric(),
       w_diff_c = scale(w_diff, scale = FALSE) %>% as.numeric(),
-      sampled_for_calibration = rbinom(n, size = 1, prob = 50 / n)
+      sampled_for_calibration = rbinom(n, size = 1, prob = calibration_n / n)
     ) %>%
     group_by(id) %>%
     mutate(
@@ -56,10 +56,10 @@ genesis <- function(mu_u_n, sd_u_n, ...){
 sims <- 
   expand_grid(iteration = seq(1, 1000, 1),
               conditions) %>%
-  group_by(iteration, mu_u_n, sd_u_n) %>%
+  group_by(iteration, calibration_n, mu_u_n, sd_u_n) %>%
   nest() %>%
   mutate(
-    df = pmap(list(mu_u_n, sd_u_n), ~genesis(mu_u_n, sd_u_n) %>%
+    df = pmap(list(calibration_n, mu_u_n, sd_u_n), ~genesis(calibration_n, mu_u_n, sd_u_n) %>%
                 select(id, x_b, x_f, x_diff, x_diff_c, w_f_n, sampled_for_calibration, age_trunc, age_centered, female, brain_volume))
   )
 
