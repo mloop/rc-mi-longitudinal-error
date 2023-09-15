@@ -1,8 +1,8 @@
-# Bayesian calibration of different PWV machines
+# Calibration of different PWV machines
 
 This project attempts to solve a problem in studies using pulse wave velocity (PWV). In longitudinal studies, the device used to measure PWV can change due to companies going out of business, or simply differences in preference of the principal investigator funding the measurement of PWV. These changes naturally lead to difficulties when trying to compare values of PWV across different devices.
 
-One way to approach this problem might be a latent variable model fit in the Bayesian framework. Briefly, you could treat each device's measurements as imperfect measurements of the underlying construct "PWV." Then, you could calculate the differences between the two latent variables and treat that as the difference you want to model over time. Covariates could be used to understand variation in this difference.
+Two existing methods for approaching this problem are: (1) regression calibration; and (2) multiple imputation. However, it is unclear whether one method might be preferred over another.
 
-A helpful bit of information for such a study would certainly be information on the relationship between the two machines, measured on the same person at the same point in time. This information would improve prediction of the true value of the latent variable.
+This *in silico* study found that, generally, regression calibration with bootstrap standard errors was the superior approach, particularly with smaller calibration studies.
 
