@@ -12,7 +12,7 @@ bias_summary <- results[term == "(Intercept)", true_value := 1000
                                 ][.(method = c("snipe (sandwich)", "snipe (boot)", "naive", "multiple imputation (pmm)", "multiple imputation (full stochastic)", "complete case", "true"), to = c("Regression calibration (sandwich)", "Regression calibration (bootstrap)", "Naive", "Multiple imputation (PMM)", "Multiple imputation (full stochastic)", "Complete case", "Control")), on = "method", method := i.to
                                   ][, method := forcats::as_factor(method) |> forcats::fct_relevel("Naive", "Complete case", "Regression calibration (sandwich)", "Regression calibration (bootstrap)", "Multiple imputation (PMM)", "Multiple imputation (full stochastic)")]
 
-p <- bias_summary[term == "w_diff_c", ] |>
+p <- bias_summary[term == "w_diff_c" & method != "Regression calibration (sandwich)", ] |>
   ggplot(aes(x = percent_bias, y = method, color = factor(sd_u_n))) +
   geom_point(position = position_dodge(0.8)) +
   geom_vline(xintercept = 0, linetype = "dashed") +

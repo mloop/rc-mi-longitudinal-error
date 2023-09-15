@@ -10,7 +10,7 @@ re_summary <- results[, .(empirical_standard_error = sd(estimate)), by = .(calib
                           ][.(method = c("snipe (sandwich)", "snipe (boot)", "naive", "multiple imputation (pmm)", "multiple imputation (full stochastic)", "complete case", "true"), to = c("Regression calibration (sandwich)", "Regression calibration (bootstrap)", "Naive", "Multiple imputation (PMM)", "Multiple imputation (full stochastic)", "Complete case", "Control")), on = "method", method := i.to
 ][, method := forcats::as_factor(method) |> forcats::fct_relevel("Naive", "Complete case", "Regression calibration (sandwich)", "Regression calibration (bootstrap)", "Multiple imputation (PMM)", "Multiple imputation (full stochastic)")][, calibration_n := forcats::as_factor(calibration_n) |> forcats::fct_relevel("50", "250")]
 
-p <- re_summary[term == "w_diff_c", ] |>
+p <- re_summary[term == "w_diff_c" & method != "Regression calibration (sandwich)", ] |>
   ggplot(aes(x = relative_efficiency, y = method, color = factor(sd_u_n))) +
   geom_point(position = position_dodge(0.8)) +
   labs(x = "Relative efficiency of estimate for association of interest", 
