@@ -5,7 +5,7 @@ library(ggplot2)
 results <- read_rds("../output/08_results.rds") |> setDT()
 
 se_summary <- results[, .(empirical_standard_error = sd(estimate),
-                          avg_se = mean(std.error)), by = .(sd_u_n, term, method)
+                          avg_se = mean(std.error)), by = .(calibration_n, sd_u_n, term, method)
 ][,
   `:=` (se_diff = avg_se - empirical_standard_error,
         se_diff_percent = (avg_se - empirical_standard_error) / empirical_standard_error)
@@ -16,6 +16,7 @@ p <- se_summary[term == "w_diff_c"] |>
   ggplot(aes(x = se_diff_percent, y = method, color = factor(sd_u_n))) +
   geom_point(position = position_dodge(0.8)) +
   geom_vline(xintercept = 0, linetype = "dashed") +
+  facet_wrap(~ forcats::fct_relevel(paste0("n = ", calibration_n), "n = 50", "n = 250"), ncol = 2) +
   labs(x = stringr::str_wrap("Relative difference: (mean standard error - empirical standard error)/empirical standard error", 40), 
        y = "") +
   scale_color_manual(values = c("#03244d", "#dd550c", "#496e9c"), name = stringr::str_wrap("Measurement error at follow-up (cm/s)", 10), breaks = c(150, 100, 50)) +
@@ -25,4 +26,4 @@ p <- se_summary[term == "w_diff_c"] |>
   ) +
   scale_x_continuous(labels = scales::percent)
 
-ggsave("../figs/11_se_bias_dotplot.pdf", p, width = 7, height = 3, units = "in")
+ggsave("../figs/11_se_bias_dotplot.pdf", p, width = 7, height = 4, units = "in")
