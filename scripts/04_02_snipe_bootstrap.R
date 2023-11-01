@@ -1,6 +1,7 @@
 library(tidyverse)
 library(broom)
 library(boot)
+library(modelr)
 
 sims <- read_rds("../data/01_simulated_data.rds")
 
@@ -38,12 +39,16 @@ fit <- sims %>%
                       ########
                     mutate(
                       w_diff = pred - x_b,
-                      w_diff_c = scale(w_diff, scale = FALSE)  %>% as.numeric()
+                      w_diff_c = scale(w_diff, scale = FALSE)  %>% as.numeric(),
+                      w = if_else(sampled_for_calibration == 1, 5, 1)
                     )
     ),
     fits_initial = map(df_calib, ~lm(brain_volume ~ w_diff_c + female + age_centered, data = .)),
     
-    se_boot = map(df_calib, ~boot(data = .x, statistic = boot_rc, R = 200)$t %>%
+    se_boot = map(df_calib, ~boot(data = .x, 
+                                  statistic = boot_rc, 
+                                  R = 200, 
+                                  weights = .x$w)$t %>%
                         sd() %>%
       tibble(std.error = ., term = "w_diff_c")),
     tidy_fits = map(fits_initial, ~tidy(.) %>%
