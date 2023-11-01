@@ -1,31 +1,28 @@
 #!/bin/bash
 
-#SBATCH --mem-per-cpu=100M
 #SBATCH --job-name=me-sim
 #SBATCH -p general
-#SBATCH --ntasks=1
-#SBATCH -N 1
-#SBATCH --cpus-per-task=48
-#SBATCH -t 11:00:00
+#SBATCH --mem=10g
+#SBATCH -t 12:00:00
 #SBATCH --mail-type=END,FAIL
 
 set -o errexit
 
-module load R/4.2.1
-module load gcc/8.4.0
+module load gcc/9.3.0
+module load R/4.2.3
 
-Rscript 01_simulate_data.R
-Rscript 02_naive.R
-Rscript 03_complete_case.R
-Rscript 04_snipe.R
-Rscript 04_01_snipe_sandwich.R
+#Rscript 01_simulate_data.R
+#Rscript 02_naive.R
+#Rscript 03_complete_case.R
+Rscript 04_02_snipe_bootstrap.R
 Rscript 05_01_split_datasets.R
 Rscript 05_02_create_imputations.R
+Rscript 05_02_01_create_full_stochastic_imputations.R
 Rscript 05_03_pool_results.R
 #Rscript 06_bayesian_model.R
 Rscript 07_true_model.R
-Rscript 08_compile_results.R
-Rscript 09_percent_bias_dotplot.R
-Rscript 10_relative_efficiency_dotplot.R
-Rscript 11_standard_error_bias_dotplot.R
+#Rscript 08_compile_results.R
+#Rscript 09_percent_bias_dotplot.R
+#Rscript 10_relative_efficiency_dotplot.R
+#Rscript 11_standard_error_bias_dotplot.R
 
