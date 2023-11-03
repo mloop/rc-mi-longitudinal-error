@@ -61,7 +61,7 @@ fit <- x %>%
     fits = map2(tidy_fits, se_boot, ~left_join(.x, .y, by = "term"))
     
   ) %>%
-  select(-calib_fit, -df, -df_calib, -fits_initial, -se_boot, -tidy_fits, -data) %>%
+  select(-calib_fit, -df, -df_calib, -fits_initial, -se_boot, -tidy_fits) %>%
   unnest(fits)
 
 fit %>% write_rds(file = paste0("../output/04_02_snipe_boot_", i, ".rds"))
