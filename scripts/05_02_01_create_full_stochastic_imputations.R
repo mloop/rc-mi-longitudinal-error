@@ -1,9 +1,10 @@
+i <- Sys.getenv('SLURM_ARRAY_TASK_ID') |> as.numeric()
+
 library(tidyverse)
 library(broom)
 library(mice)
 
 
-for(i in 1:1000){
   
   set.seed(987234+i)
 
@@ -39,4 +40,3 @@ for(i in 1:1000){
     unnest(fits)
   
   write_rds(fit_imp, paste0("../output/05_12_full_stochastic_", i, ".rds"))
-}
