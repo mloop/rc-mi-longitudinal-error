@@ -1,4 +1,4 @@
-i <- Sys.getenv('SLURM_ARRAY_TASK_ID')
+i <- Sys.getenv('SLURM_ARRAY_TASK_ID') |> as.numeric()
 
 library(tidyverse)
 library(broom)
