@@ -44,7 +44,7 @@ fit <- x %>%
                     mutate(
                       w_diff = pred - x_b,
                       w_diff_c = scale(w_diff, scale = FALSE)  %>% as.numeric(),
-                      w = if_else(sampled_for_calibration == 1, 20, 1)
+                      w = if_else(sampled_for_calibration == 1, 10, 1)
                     )
     ),
     fits_initial = map(df_calib, ~lm(brain_volume ~ w_diff_c + female + age_centered, data = .)),

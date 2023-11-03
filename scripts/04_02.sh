@@ -3,8 +3,8 @@
 #SBATCH --mem-per-cpu=500m
 #SBATCH --job-name=snipe-bootstrap
 #SBATCH -p general
-#SBATCH --array=1-2
-#SBATCH -t 1:00:00
+#SBATCH --array=1-1000
+#SBATCH -t 00:02:00
 #SBATCH --mail-type=END,FAIL
 
 module load gcc/9.3.0
