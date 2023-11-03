@@ -1,9 +1,13 @@
+i <- Sys.getenv('SLURM_ARRAY_TASK_ID') |> as.numeric()
+
+set.seed(65452+i)
+
 library(tidyverse)
 library(broom)
 library(boot)
 library(modelr)
 
-sims <- read_rds("../data/01_simulated_data.rds")
+x <- read_rds(paste0("../output/05_01_", i, ".rds"))
 
 boot_rc <- function(data, index){
   d <- data[index, ]
@@ -28,7 +32,7 @@ boot_rc <- function(data, index){
 }
 
 # Perform "calibration method" at visit 2, then use predicted values on new machine using data on old machine
-fit <- sims %>%
+fit <- x %>%
   mutate(
     df  = map(df, ~ungroup(.x)),
     calib_fit = map(df, ~lm(x_f ~ w_f_n + female + age_centered + x_b, data = filter(., sampled_for_calibration == 1))),  # Perform calibration study
@@ -60,4 +64,4 @@ fit <- sims %>%
   select(-calib_fit, -df, -df_calib, -fits_initial, -se_boot, -tidy_fits, -data) %>%
   unnest(fits)
 
-fit %>% write_rds(file = "../output/04_02_snipe_boot.rds")
+fit %>% write_rds(file = paste0("../output/04_02_snipe_boot_", i, ".rds"))
