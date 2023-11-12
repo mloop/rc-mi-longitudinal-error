@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#SBATCH --job-name=quick-models
+#SBATCH -p general
+#SBATCH --mem=10g
+#SBATCH -t 00:10:00
+#SBATCH --mail-type=END,FAIL
+
+set -o errexit
+
+module load gcc/9.3.0
+module load R/4.2.3
+
+Rscript 02_naive.R
+Rscript 03_complete_case.R
+Rscript 07_true_model.R
