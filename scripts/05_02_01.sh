@@ -4,7 +4,7 @@
 #SBATCH --job-name=full_stochastic_mi
 #SBATCH -p general
 #SBATCH --array=1-1000
-#SBATCH -t 00:04:00
+#SBATCH -t 00:10:00
 #SBATCH --mail-type=END,FAIL
 
 module load gcc/9.3.0

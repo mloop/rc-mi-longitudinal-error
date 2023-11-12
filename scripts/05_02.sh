@@ -4,7 +4,7 @@
 #SBATCH --job-name=pmm
 #SBATCH -p general
 #SBATCH --array=1-1000
-#SBATCH -t 00:05:00
+#SBATCH -t 00:10:00
 #SBATCH --mail-type=END,FAIL
 
 module load gcc/9.3.0
