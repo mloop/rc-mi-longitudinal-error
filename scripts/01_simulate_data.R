@@ -1,6 +1,8 @@
+i <- Sys.getenv('SLURM_ARRAY_TASK_ID') |> as.numeric()
+
 library(tidyverse)
 
-set.seed(74838)
+set.seed(74838+i)
 
 
 
@@ -64,7 +66,7 @@ genesis <- function(n, calibration_p, mu_u_n, sd_u_n, ...){
 # Create simulated data
 
 sims <- 
-  expand_grid(iteration = seq(1, 5000, 1),
+  expand_grid(iteration = i,
               conditions) %>%
   group_by(iteration, n, calibration_p, mu_u_n, sd_u_n) %>%
   nest() %>%
@@ -77,4 +79,4 @@ sims <-
 # Write out datasets
 
 dir.create("../data/", showWarnings = FALSE)
-write_rds(sims, file = "../data/01_simulated_data.rds")
+write_rds(sims, file = paste0("../data/01_simulated_data_", i, ".rds"))
