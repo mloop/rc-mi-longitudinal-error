@@ -2,8 +2,9 @@
 
 #SBATCH --job-name=create-datasets
 #SBATCH -p general
-#SBATCH --mem=10g
-#SBATCH -t 03:00:00
+#SBATCH --array=1-5
+#SBATCH --mem=2g
+#SBATCH -t 00:03:00
 #SBATCH --mail-type=END,FAIL
 
 set -o errexit
@@ -12,4 +13,3 @@ module load gcc/9.3.0
 module load R/4.2.3
 
 Rscript 01_simulate_data.R
-Rscript 05_01_split_datasets.R
