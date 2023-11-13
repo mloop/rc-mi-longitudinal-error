@@ -2,8 +2,8 @@
 
 #SBATCH --job-name=create-datasets
 #SBATCH -p general
-#SBATCH --mem=10g
-#SBATCH -t 03:00:00
+#SBATCH --mem=20g
+#SBATCH -t 08:00:00
 #SBATCH --mail-type=END,FAIL
 
 set -o errexit
