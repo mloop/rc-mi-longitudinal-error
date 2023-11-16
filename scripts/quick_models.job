@@ -2,7 +2,8 @@
 
 #SBATCH --job-name=quick-models
 #SBATCH -p general
-#SBATCH --mem=10g
+#SBATCH --array=1-5000
+#SBATCH --mem=1g
 #SBATCH -t 00:10:00
 #SBATCH --mail-type=END,FAIL
 ##SBATCH --output=../output/quick_models/%A_%a.out
