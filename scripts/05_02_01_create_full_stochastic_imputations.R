@@ -8,7 +8,7 @@ library(mice)
   
   set.seed(987234+i)
 
-  x <- read_rds(paste0("../data/01_simulated_data__", i, ".rds"))
+  x <- read_rds(paste0("../data/01_simulated_data_", i, ".rds"))
 
   fit_imp <- x %>%
     mutate(
