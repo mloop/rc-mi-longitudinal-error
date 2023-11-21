@@ -38,5 +38,6 @@ library(mice)
     ) %>%
     select(-imp, -modified_imp, -df, -new_mids) %>%
     unnest(fits)
-  
-  write_rds(fit_imp, paste0("../output/05_12_full_stochastic_", i, ".rds"))
+
+dir.create("../output/mi_full_stochastic/", showWarnings = FALSE)
+  write_rds(fit_imp, paste0("../output/mi_full_stochastic/05_12_full_stochastic_", i, ".rds"))

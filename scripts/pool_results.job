@@ -13,4 +13,5 @@ module load R/4.2.3
 
 Rscript 04_03_pool_results.R
 Rscript 05_03_pool_results.R
+Rscript 07_01_pool_quick_results.R
 Rscript 08_compile_results.R

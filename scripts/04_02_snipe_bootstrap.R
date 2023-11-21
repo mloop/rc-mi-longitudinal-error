@@ -64,4 +64,5 @@ fit <- x %>%
   select(-calib_fit, -df, -df_calib, -fits_initial, -se_boot, -tidy_fits) %>%
   unnest(fits)
 
-fit %>% write_rds(file = paste0("../output/04_02_snipe_boot_", i, ".rds"))
+dir.create("../output/snipe_boot/", showWarnings = FALSE)
+fit %>% write_rds(file = paste0("../output/snipe_boot/04_02_snipe_boot_", i, ".rds"))
