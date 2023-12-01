@@ -1,22 +1,37 @@
-library(readr)
-library(data.table)
-library(ggplot2)
+library(tidyverse)
 
-results <- read_rds("../output/08_results.rds") |> setDT()
+results <- read_rds("../output/08_results.rds")
 
-re_summary <- results[, .(empirical_standard_error = sd(estimate)), by = .(calibration_n, sd_u_n, term, method)
-                      ][, empirical_standard_error := empirical_standard_error, keyby = .(calibration_n, sd_u_n, term, method)
-                        ][, relative_efficiency := (1 / empirical_standard_error^2) / (1 / empirical_standard_error[.N]^2), by = .(calibration_n, sd_u_n, term)
-                          ][.(method = c("snipe (sandwich)", "snipe (boot)", "naive", "multiple imputation (pmm)", "multiple imputation (full stochastic)", "complete case", "true"), to = c("Regression calibration (sandwich)", "Regression calibration (bootstrap)", "Naive", "Multiple imputation (PMM)", "Multiple imputation (full stochastic)", "Complete case", "Control")), on = "method", method := i.to
-][, method := forcats::as_factor(method) |> forcats::fct_relevel("Naive", "Complete case", "Regression calibration (sandwich)", "Regression calibration (bootstrap)", "Multiple imputation (PMM)", "Multiple imputation (full stochastic)")][, calibration_n := forcats::as_factor(calibration_n) |> forcats::fct_relevel("50", "250")]
+re_summary <- results %>%
+  ungroup() %>%
+  group_by(n, calibration_p, sd_u_n, term, method) %>%
+  summarise(
+    empirical_standard_error = sd(estimate)
+  ) %>%
+  ungroup() %>%
+  group_by(n, calibration_p, sd_u_n, term) %>%
+  mutate(
+    relative_efficiency = (1 / empirical_standard_error^2) / (1 / last(empirical_standard_error)^2)
+  ) %>%
+  mutate(
+    method = factor(method) %>%
+      fct_recode("Regression calibration (bootstrap)" = "snipe (boot)",
+                 "Naive" = "naive",
+                 "Multiple imputation (PMM)" = "multiple imputation (pmm)",
+                 "Multiple imputation (full stochastic)" = "multiple imputation (full stochastic)",
+                 "Complete case" = "complete case", 
+                 "Control" = "true") %>%
+      fct_relevel("Naive", "Complete case", "Regression calibration (bootstrap)", "Multiple imputation (PMM)", "Multiple imputation (full stochastic)")
+  )
 
-p <- re_summary[term == "w_diff_c" & method != "Regression calibration (sandwich)", ] |>
+p <- re_summary %>%
+  filter(term == "w_diff_c") %>%
   ggplot(aes(x = relative_efficiency, y = method, color = factor(sd_u_n))) +
   geom_point(position = position_dodge(0.8)) +
   labs(x = "Relative efficiency of estimate for association of interest", 
        y = "") +
   geom_vline(xintercept = 1, linetype = "dashed") +
-  facet_wrap(~ forcats::fct_relevel(paste0("n = ", calibration_n), "n = 50", "n = 250"), ncol = 2) +
+  facet_grid(forcats::fct_relevel(paste0("n = ", n)) |> fct_relevel("n = 500", "n = 1000") ~ forcats::fct_relevel(paste0("Proportion = ", calibration_p))) +
   theme_bw() +
   theme(
     plot.title.position = "plot"

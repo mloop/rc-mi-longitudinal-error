@@ -1,13 +1,13 @@
+i <- Sys.getenv('SLURM_ARRAY_TASK_ID') |> as.numeric()
+
 library(tidyverse)
 library(broom)
 library(mice)
 
-
-for(i in 1:1000){
   
   set.seed(987234+i)
 
-  x <- read_rds(paste0("../output/05_01_", i, ".rds"))
+  x <- read_rds(paste0("../data/01_simulated_data_", i, ".rds"))
 
   fit_imp <- x %>%
     mutate(
@@ -36,6 +36,6 @@ for(i in 1:1000){
     ) %>%
     select(-imp, -modified_imp, -df, -new_mids) %>%
     unnest(fits)
-  
-  write_rds(fit_imp, paste0("../output/05_02_", i, ".rds"))
-}
+
+dir.create("../output/mi_pmm/", showWarnings = FALSE)
+  write_rds(fit_imp, paste0("../output/mi_pmm/05_02_", i, ".rds"))

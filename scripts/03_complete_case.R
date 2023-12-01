@@ -1,9 +1,11 @@
+i <- Sys.getenv('SLURM_ARRAY_TASK_ID') |> as.numeric()
+
 library(tidyverse)
 library(broom)
 
-sims <- read_rds("../data/01_simulated_data.rds")
+x <- read_rds(paste0("../data/01_simulated_data_", i, ".rds"))
 
-fit <- sims %>%
+fit <- x %>%
   mutate(
     fits = map(df, ~filter(., sampled_for_calibration == 1) %>%
                  mutate(w_diff = x_f - x_b,
@@ -15,4 +17,5 @@ fit <- sims %>%
   select(-df, -data) %>%
   unnest(fits)
 
-fit %>% write_rds(., file = "../output/03_complete_case.rds")
+dir.create("../output/complete_case/", showWarnings = FALSE)
+fit %>% write_rds(., file = paste0("../output/complete_case/03_complete_case_", i, ".rds"))

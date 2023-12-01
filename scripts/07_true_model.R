@@ -1,10 +1,12 @@
+i <- Sys.getenv('SLURM_ARRAY_TASK_ID') |> as.numeric()
+
 library(tidyverse)
 library(broom)
 
-sims <- read_rds("../data/01_simulated_data.rds")
+x <- read_rds(paste0("../data/01_simulated_data_", i, ".rds"))
 
 # Fit simple linear regression model to observed
-fit <- sims %>%
+fit <- x %>%
   mutate(
     fits = map(df, ~ lm(brain_volume ~ x_diff_c + female + age_centered, data = .) %>%
                  tidy())
@@ -12,4 +14,5 @@ fit <- sims %>%
   select(-df, -data) %>%
   unnest(fits)
 
-fit %>% write_rds(., file = "../output/07_true_model.rds")
+dir.create("../output/true/", showWarnings = FALSE)
+fit %>% write_rds(., file = paste0("../output/true/07_true_model_", i, ".rds"))

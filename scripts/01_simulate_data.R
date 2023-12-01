@@ -1,20 +1,25 @@
+i <- Sys.getenv('SLURM_ARRAY_TASK_ID') |> as.numeric()
+
 library(tidyverse)
 
-set.seed(74838)
+set.seed(74838+i)
 
-n <- 2500
+
 
 # Create simulation conditions
 
-conditions <- expand_grid(calibration_n = c(50, 250, 625),
-                          mu_u_n = c(0), 
-                          sd_u_n = c(100, 50, 150))
+conditions <- expand_grid(
+  n = c(500, 1000, 2500),
+  calibration_p = c(0.05, 0.1, 0.25),
+  mu_u_n = c(0), 
+  sd_u_n = c(100, 50, 150)
+  )
 
 conditions
 
 # Write function for data generation
 
-genesis <- function(calibration_n, mu_u_n, sd_u_n, ...){
+genesis <- function(n, calibration_p, mu_u_n, sd_u_n, ...){
   x <- tibble(
     id = seq(1, n, 1),
     x_b = truncnorm::rtruncnorm(n, mean = 1100, sd = 350, a = 300, b = 2500),
@@ -39,8 +44,15 @@ genesis <- function(calibration_n, mu_u_n, sd_u_n, ...){
     ungroup() %>%
     mutate(
       x_diff_c = scale(x_diff, scale = FALSE) %>% as.numeric(),
-      w_diff_c = scale(w_diff, scale = FALSE) %>% as.numeric(),
-      sampled_for_calibration = rbinom(n, size = 1, prob = calibration_n / n)
+      w_diff_c = scale(w_diff, scale = FALSE) %>% as.numeric()
+    ) %>%
+    left_join(., 
+              slice_sample(., n = round(calibration_p * n)) %>% 
+                mutate(sampled_for_calibration = 1) %>%
+                select(id, sampled_for_calibration),
+              by = "id") %>%
+    mutate(
+      sampled_for_calibration = if_else(is.na(sampled_for_calibration), 0, sampled_for_calibration)
     ) %>%
     group_by(id) %>%
     mutate(
@@ -54,14 +66,17 @@ genesis <- function(calibration_n, mu_u_n, sd_u_n, ...){
 # Create simulated data
 
 sims <- 
-  expand_grid(iteration = seq(1, 1000, 1),
+  expand_grid(iteration = i,
               conditions) %>%
-  group_by(iteration, calibration_n, mu_u_n, sd_u_n) %>%
+  group_by(iteration, n, calibration_p, mu_u_n, sd_u_n) %>%
   nest() %>%
   mutate(
-    df = pmap(list(calibration_n, mu_u_n, sd_u_n), ~genesis(calibration_n, mu_u_n, sd_u_n) %>%
+    df = pmap(list(n, calibration_p, mu_u_n, sd_u_n), ~genesis(n, calibration_p, mu_u_n, sd_u_n) %>%
                 select(id, x_b, x_f, x_diff, x_diff_c, w_f_n, sampled_for_calibration, age_trunc, age_centered, female, brain_volume))
   )
 
+
+# Write out datasets
+
 dir.create("../data/", showWarnings = FALSE)
-write_rds(sims, file = "../data/01_simulated_data.rds")
+write_rds(sims, file = paste0("../data/01_simulated_data_", i, ".rds"))
