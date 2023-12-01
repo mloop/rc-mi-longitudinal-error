@@ -2,8 +2,8 @@
 
 #SBATCH --job-name=pool-results
 #SBATCH -p general
-#SBATCH --mem=10g
-#SBATCH -t 00:05:00
+#SBATCH --mem=20g
+#SBATCH -t 01:00:00
 #SBATCH --mail-type=END,FAIL
 
 set -o errexit
