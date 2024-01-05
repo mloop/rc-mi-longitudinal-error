@@ -4,5 +4,5 @@ This project attempts to solve a problem in studies using pulse wave velocity (P
 
 Two existing methods for approaching this problem are: (1) regression calibration; and (2) multiple imputation. However, it is unclear whether one method might be preferred over another.
 
-This *in silico* study found that, generally, regression calibration with bootstrap standard errors was the superior approach, particularly with smaller calibration studies.
+This *in silico* study found that, generally, multiple imputation with predictive mean matching was the superior approach.
 
