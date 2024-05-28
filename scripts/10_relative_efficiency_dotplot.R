@@ -34,8 +34,9 @@ p <- re_summary %>%
   facet_grid(forcats::fct_relevel(paste0("n = ", n)) |> fct_relevel("n = 500", "n = 1000") ~ forcats::fct_relevel(paste0("Proportion = ", calibration_p))) +
   theme_bw() +
   theme(
-    plot.title.position = "plot"
+    plot.title.position = "plot",
+    legend.position = "bottom"
   ) +
   scale_color_manual(values = c("#03244d", "#dd550c", "#496e9c"), name = stringr::str_wrap("Measurement error at follow-up (cm/s)", 10), breaks = c(150, 100, 50))
 
-ggsave("../figs/10_relative_efficiency_dotplot.pdf", p, width = 7, height = 4, units = "in")
+ggsave("../figs/10_relative_efficiency_dotplot.pdf", p, width = 6, height = 6, units = "in")

@@ -34,8 +34,9 @@ p <- se_summary %>%
   theme_bw() +
   theme(
     plot.title.position = "plot",
-    axis.text.x = element_text(angle = 45, hjust = 1)
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom"
   ) +
   scale_x_continuous(labels = scales::percent)
 
-ggsave("../figs/11_se_bias_dotplot.pdf", p, width = 7, height = 4, units = "in")
+ggsave("../figs/11_se_bias_dotplot.pdf", p, width = 6, height = 6, units = "in")

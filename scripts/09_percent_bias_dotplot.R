@@ -39,9 +39,10 @@ p <- bias_summary %>%
   scale_color_manual(values = c("#03244d", "#dd550c", "#496e9c"), name = stringr::str_wrap("Measurement error at follow-up (cm/s)", 10), breaks = c(150, 100, 50)) +
   theme_bw() +
   theme(
-    plot.title.position = "plot"
+    plot.title.position = "plot",
+    legend.position = "bottom"
   ) +
   scale_x_continuous(labels = scales::percent, limits = c(-0.12, 0.05))
 
-ggsave("../figs/09_percent_bias_dotplot.pdf", p, width = 7, height = 4, units = "in")
+ggsave("../figs/09_percent_bias_dotplot.pdf", p, width = 6, height = 6, units = "in")
 
